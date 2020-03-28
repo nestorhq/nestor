@@ -1,0 +1,6 @@
+version: "1.0"
+resources:
+  s3Bucket:
+    - id: one
+  dynamoDbTable:
+    - id: two
