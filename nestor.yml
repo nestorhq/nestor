@@ -1,4 +1,6 @@
-version: "1.0"
+nestor: "1.0"
+app:
+  name: myapp
 resources:
   s3Bucket:
     - id: one

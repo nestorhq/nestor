@@ -21,8 +21,13 @@ type ResourcesDefinition struct {
 	DynamoDbTable []ResourceDynamoDbTable `json:"dynamoDbTable"`
 }
 
+type AppDefinition struct {
+	Name string
+}
+
 type Config struct {
-	Version   string
+	Nestor    string
+	App       AppDefinition       `json:"app"`
 	Resources ResourcesDefinition `json:"resources"`
 }
 
