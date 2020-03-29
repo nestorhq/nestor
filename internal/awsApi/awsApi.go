@@ -3,6 +3,7 @@ package awsApi
 import (
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
@@ -11,13 +12,17 @@ import (
 type AwsApi struct {
 	profileName string
 	session     *session.Session
+	dynamoDbApi *DynamoDbApi
 }
 
-func NewAwsApi(profileName string) (*AwsApi, error) {
+func NewAwsApi(profileName string, region string) (*AwsApi, error) {
 	var awsApi = AwsApi{profileName: profileName}
 
 	sess, err := session.NewSessionWithOptions(session.Options{
 		Profile: profileName,
+		Config: aws.Config{
+			Region: aws.String(region),
+		},
 	})
 	if err != nil {
 		return nil, err
@@ -45,5 +50,15 @@ func NewAwsApi(profileName string) (*AwsApi, error) {
 		return nil, err
 	}
 	fmt.Println(result)
+
+	// initialize different AWS Apis
+	awsApi.dynamoDbApi, err = NewDynameDbApi(sess)
+	if err != nil {
+		return nil, err
+	}
 	return &awsApi, nil
+}
+
+func (api *AwsApi) CreateMonoTable(tableName string) {
+	api.dynamoDbApi.createMonoTable(tableName)
 }

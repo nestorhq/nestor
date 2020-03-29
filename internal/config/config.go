@@ -16,9 +16,14 @@ type ResourceDynamoDbTable struct {
 	Id string
 }
 
+type ResourceHttpApi struct {
+	Id string
+}
+
 type ResourcesDefinition struct {
 	S3Bucket      []ResourceS3Bucket      `json:"s3Bucket"`
 	DynamoDbTable []ResourceDynamoDbTable `json:"dynamoDbTable"`
+	HttpApi       []ResourceHttpApi       `json:"httpApi"`
 }
 
 type AppDefinition struct {

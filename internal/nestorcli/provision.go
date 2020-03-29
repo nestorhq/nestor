@@ -8,12 +8,22 @@ import (
 )
 
 func CliProvision(environment string, nestorConfig *config.Config) {
-	fmt.Printf("CliProvision: Environment is %s\n", environment)
+	var appName = nestorConfig.App.Name
+	fmt.Printf("Provision:\n")
+	fmt.Printf(" environment: %s\n", environment)
+	fmt.Printf(" appName    : %s\n", appName)
 	fmt.Printf("config: %v\n", nestorConfig)
 
-	_, err := awsApi.NewAwsApi("sls")
+	api, err := awsApi.NewAwsApi("sls", "us-west-1")
 
 	if err != nil {
 		panic(err)
+	}
+
+	// 1: dynamodb tables
+	for _, table := range nestorConfig.Resources.DynamoDbTable {
+		var tableName = appName + "-" + environment + "-" + table.Id
+		fmt.Printf("tableName: %s\n", tableName)
+		api.CreateMonoTable(tableName)
 	}
 }

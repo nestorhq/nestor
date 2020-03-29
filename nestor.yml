@@ -2,7 +2,9 @@ nestor: "1.0"
 app:
   name: myapp
 resources:
+  httpApi:
+    - id: myHttpApi
   s3Bucket:
     - id: one
   dynamoDbTable:
-    - id: two
+    - id: myTable
