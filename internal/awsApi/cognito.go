@@ -22,9 +22,27 @@ func NewCognitoAPI(session *session.Session, cognitoRegion string) (*CognitoAPI,
 	return &api, nil
 }
 
+// doc at:
+// https://docs.aws.amazon.com/sdk-for-go/api/service/cognitoidentityprovider/#CreateUserPoolInput
 func (api *CognitoAPI) createUserPool(userPoolName string) {
 	input := &cognitoidentityprovider.CreateUserPoolInput{
 		PoolName: &userPoolName,
+		AdminCreateUserConfig: &cognitoidentityprovider.AdminCreateUserConfigType{
+			AllowAdminCreateUserOnly: aws.Bool(false),
+			InviteMessageTemplate: &cognitoidentityprovider.MessageTemplateType{
+				SMSMessage:   aws.String("SMSMessage {####} {username}"),
+				EmailMessage: aws.String("EmailMessage {####} {username}"),
+				EmailSubject: aws.String("EmailSubject {####} {username}"),
+			},
+		},
+		DeviceConfiguration: &cognitoidentityprovider.DeviceConfigurationType{
+			ChallengeRequiredOnNewDevice:     aws.Bool(true),
+			DeviceOnlyRememberedOnUserPrompt: aws.Bool(true),
+		},
+		EmailConfiguration: &cognitoidentityprovider.EmailConfigurationType{
+			// TODO: use own SES account
+			EmailSendingAccount: aws.String("COGNITO_DEFAULT"),
+		},
 	}
 
 	result, err := api.client.CreateUserPool(input)
