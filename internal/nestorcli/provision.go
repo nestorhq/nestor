@@ -3,10 +3,11 @@ package nestorcli
 import (
 	"fmt"
 
-	"github.com/nestorhq/nestor/internal/awsApi"
+	"github.com/nestorhq/nestor/internal/awsapi"
 	"github.com/nestorhq/nestor/internal/config"
 )
 
+// CliProvision processing for provision CLI command
 func CliProvision(environment string, nestorConfig *config.Config) {
 	var appName = nestorConfig.App.Name
 	fmt.Printf("Provision:\n")
@@ -14,7 +15,7 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	fmt.Printf(" appName    : %s\n", appName)
 	fmt.Printf("config: %v\n", nestorConfig)
 
-	api, err := awsApi.NewAwsApi("sls", "us-west-1")
+	api, err := awsapi.NewAwsAPI("sls", "us-west-1")
 
 	if err != nil {
 		panic(err)

@@ -1,4 +1,4 @@
-package awsApi
+package awsapi
 
 import (
 	"fmt"
@@ -9,18 +9,20 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
-type DynamoDbApi struct {
+// DynamoDbAPI Access to DynamoDb API
+type DynamoDbAPI struct {
 	client *dynamodb.DynamoDB
 }
 
-func NewDynameDbApi(session *session.Session) (*DynamoDbApi, error) {
-	var api = DynamoDbApi{}
+// NewDynamoDbAPI constructor
+func NewDynamoDbAPI(session *session.Session) (*DynamoDbAPI, error) {
+	var api = DynamoDbAPI{}
 	// Create DynamoDB client
 	api.client = dynamodb.New(session)
 	return &api, nil
 }
 
-func (api *DynamoDbApi) createMonoTable(tableName string) {
+func (api *DynamoDbAPI) createMonoTable(tableName string) {
 
 	input := &dynamodb.CreateTableInput{
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{

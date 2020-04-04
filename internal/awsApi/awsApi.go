@@ -1,4 +1,4 @@
-package awsApi
+package awsapi
 
 import (
 	"fmt"
@@ -9,14 +9,16 @@ import (
 	"github.com/aws/aws-sdk-go/service/sts"
 )
 
-type AwsApi struct {
+// AwsAPI api to work on AWS
+type AwsAPI struct {
 	profileName string
 	session     *session.Session
-	dynamoDbApi *DynamoDbApi
+	dynamoDbAPI *DynamoDbAPI
 }
 
-func NewAwsApi(profileName string, region string) (*AwsApi, error) {
-	var awsApi = AwsApi{profileName: profileName}
+// NewAwsAPI constructor
+func NewAwsAPI(profileName string, region string) (*AwsAPI, error) {
+	var awsAPI = AwsAPI{profileName: profileName}
 
 	sess, err := session.NewSessionWithOptions(session.Options{
 		Profile: profileName,
@@ -27,7 +29,7 @@ func NewAwsApi(profileName string, region string) (*AwsApi, error) {
 	if err != nil {
 		return nil, err
 	}
-	awsApi.session = sess
+	awsAPI.session = sess
 
 	//	fmt.Printf("region: %v\n", sess.Config.Endpoint)
 
@@ -52,13 +54,14 @@ func NewAwsApi(profileName string, region string) (*AwsApi, error) {
 	fmt.Println(result)
 
 	// initialize different AWS Apis
-	awsApi.dynamoDbApi, err = NewDynameDbApi(sess)
+	awsAPI.dynamoDbAPI, err = NewDynamoDbAPI(sess)
 	if err != nil {
 		return nil, err
 	}
-	return &awsApi, nil
+	return &awsAPI, nil
 }
 
-func (api *AwsApi) CreateMonoTable(tableName string) {
-	api.dynamoDbApi.createMonoTable(tableName)
+// CreateMonoTable create a mongoDb table following the mono-table schema
+func (api *AwsAPI) CreateMonoTable(tableName string) {
+	api.dynamoDbAPI.createMonoTable(tableName)
 }
