@@ -11,15 +11,16 @@ import (
 
 // AwsAPI api to work on AWS
 type AwsAPI struct {
-	profileName string
-	session     *session.Session
-	dynamoDbAPI *DynamoDbAPI
-	cognitoAPI  *CognitoAPI
+	profileName  string
+	session      *session.Session
+	resourceTags *ResourceTags
+	dynamoDbAPI  *DynamoDbAPI
+	cognitoAPI   *CognitoAPI
 }
 
 // NewAwsAPI constructor
 func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, cognitoRegion string) (*AwsAPI, error) {
-	var awsAPI = AwsAPI{profileName: profileName}
+	var awsAPI = AwsAPI{profileName: profileName, resourceTags: resourceTags}
 
 	sess, err := session.NewSessionWithOptions(session.Options{
 		Profile: profileName,
@@ -55,11 +56,11 @@ func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, co
 	fmt.Println(result)
 
 	// initialize different AWS Apis
-	awsAPI.dynamoDbAPI, err = NewDynamoDbAPI(sess)
+	awsAPI.dynamoDbAPI, err = NewDynamoDbAPI(sess, resourceTags)
 	if err != nil {
 		return nil, err
 	}
-	awsAPI.cognitoAPI, err = NewCognitoAPI(sess, cognitoRegion)
+	awsAPI.cognitoAPI, err = NewCognitoAPI(sess, resourceTags, cognitoRegion)
 	if err != nil {
 		return nil, err
 	}

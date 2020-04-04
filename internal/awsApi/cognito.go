@@ -11,12 +11,13 @@ import (
 
 // CognitoAPI api
 type CognitoAPI struct {
-	client *cognitoidentityprovider.CognitoIdentityProvider
+	resourceTags *ResourceTags
+	client       *cognitoidentityprovider.CognitoIdentityProvider
 }
 
 // NewCognitoAPI constructor
-func NewCognitoAPI(session *session.Session, cognitoRegion string) (*CognitoAPI, error) {
-	var api = CognitoAPI{}
+func NewCognitoAPI(session *session.Session, resourceTags *ResourceTags, cognitoRegion string) (*CognitoAPI, error) {
+	var api = CognitoAPI{resourceTags: resourceTags}
 	// Create CognitoIdentityProvider client
 	api.client = cognitoidentityprovider.New(session, aws.NewConfig().WithRegion(cognitoRegion))
 	return &api, nil
@@ -103,9 +104,7 @@ func (api *CognitoAPI) createUserPool(userPoolName string) {
 		UserPoolAddOns: &cognitoidentityprovider.UserPoolAddOnsType{
 			AdvancedSecurityMode: aws.String("AUDIT"),
 		},
-		UserPoolTags: aws.StringMap(map[string]string{
-			"a": "b",
-		}),
+		UserPoolTags: aws.StringMap(api.resourceTags.getTagsAsMap()),
 	}
 
 	result, err := api.client.CreateUserPool(input)

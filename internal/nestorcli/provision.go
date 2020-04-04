@@ -15,8 +15,10 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	fmt.Printf(" appName    : %s\n", appName)
 	fmt.Printf("config: %v\n", nestorConfig)
 
-	resourceTags := awsapi.NewResourceTag(environment, appName)
+	// TODO: hard coded
+	resourceTags := awsapi.NewResourceTag("1", environment, appName)
 
+	// TODO: hard coded
 	api, err := awsapi.NewAwsAPI("sls", resourceTags, "us-west-1", "us-west-2")
 
 	if err != nil {
@@ -29,7 +31,7 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 
 	// 2: dynamodb tables
 	for _, table := range nestorConfig.Resources.DynamoDbTable {
-		var tableName = appName + "-" + environment + "-" + table.Id
+		var tableName = appName + "-" + environment + "-" + table.ID
 		fmt.Printf("tableName: %s\n", tableName)
 		api.CreateMonoTable(tableName)
 	}

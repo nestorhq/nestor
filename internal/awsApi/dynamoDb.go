@@ -11,12 +11,13 @@ import (
 
 // DynamoDbAPI Access to DynamoDb API
 type DynamoDbAPI struct {
-	client *dynamodb.DynamoDB
+	resourceTags *ResourceTags
+	client       *dynamodb.DynamoDB
 }
 
 // NewDynamoDbAPI constructor
-func NewDynamoDbAPI(session *session.Session) (*DynamoDbAPI, error) {
-	var api = DynamoDbAPI{}
+func NewDynamoDbAPI(session *session.Session, resourceTags *ResourceTags) (*DynamoDbAPI, error) {
+	var api = DynamoDbAPI{resourceTags: resourceTags}
 	// Create DynamoDB client
 	api.client = dynamodb.New(session)
 	return &api, nil
