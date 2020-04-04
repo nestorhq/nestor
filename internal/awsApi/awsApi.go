@@ -18,7 +18,7 @@ type AwsAPI struct {
 }
 
 // NewAwsAPI constructor
-func NewAwsAPI(profileName string, region string, cognitoRegion string) (*AwsAPI, error) {
+func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, cognitoRegion string) (*AwsAPI, error) {
 	var awsAPI = AwsAPI{profileName: profileName}
 
 	sess, err := session.NewSessionWithOptions(session.Options{

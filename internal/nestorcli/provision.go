@@ -15,7 +15,9 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	fmt.Printf(" appName    : %s\n", appName)
 	fmt.Printf("config: %v\n", nestorConfig)
 
-	api, err := awsapi.NewAwsAPI("sls", "us-west-1", "us-west-2")
+	resourceTags := awsapi.NewResourceTag(environment, appName)
+
+	api, err := awsapi.NewAwsAPI("sls", resourceTags, "us-west-1", "us-west-2")
 
 	if err != nil {
 		panic(err)
