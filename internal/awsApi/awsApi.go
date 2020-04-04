@@ -14,10 +14,11 @@ type AwsAPI struct {
 	profileName string
 	session     *session.Session
 	dynamoDbAPI *DynamoDbAPI
+	cognitoAPI  *CognitoAPI
 }
 
 // NewAwsAPI constructor
-func NewAwsAPI(profileName string, region string) (*AwsAPI, error) {
+func NewAwsAPI(profileName string, region string, cognitoRegion string) (*AwsAPI, error) {
 	var awsAPI = AwsAPI{profileName: profileName}
 
 	sess, err := session.NewSessionWithOptions(session.Options{
@@ -58,10 +59,19 @@ func NewAwsAPI(profileName string, region string) (*AwsAPI, error) {
 	if err != nil {
 		return nil, err
 	}
+	awsAPI.cognitoAPI, err = NewCognitoAPI(sess, cognitoRegion)
+	if err != nil {
+		return nil, err
+	}
 	return &awsAPI, nil
 }
 
 // CreateMonoTable create a mongoDb table following the mono-table schema
 func (api *AwsAPI) CreateMonoTable(tableName string) {
 	api.dynamoDbAPI.createMonoTable(tableName)
+}
+
+// CreateUserPool create a user pool
+func (api *AwsAPI) CreateUserPool(userPoolName string) {
+	api.cognitoAPI.createUserPool(userPoolName)
 }

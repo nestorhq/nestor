@@ -15,13 +15,17 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	fmt.Printf(" appName    : %s\n", appName)
 	fmt.Printf("config: %v\n", nestorConfig)
 
-	api, err := awsapi.NewAwsAPI("sls", "us-west-1")
+	api, err := awsapi.NewAwsAPI("sls", "us-west-1", "us-west-2")
 
 	if err != nil {
 		panic(err)
 	}
 
-	// 1: dynamodb tables
+	// 1: user pool
+	var userPoolName = appName + "-" + environment
+	api.CreateUserPool(userPoolName)
+
+	// 2: dynamodb tables
 	for _, table := range nestorConfig.Resources.DynamoDbTable {
 		var tableName = appName + "-" + environment + "-" + table.Id
 		fmt.Printf("tableName: %s\n", tableName)
