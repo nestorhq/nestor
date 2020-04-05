@@ -54,11 +54,13 @@ func (api *CognitoAPI) findUserPoolByName(userPoolName string) (string, error) {
 		if err != nil {
 			return "", err
 		}
+		// look for the user pool given by name
 		for _, userPool := range listPools.UserPools {
-			if userPool.Name == &userPoolName {
+			if *userPool.Name == userPoolName {
 				return *userPool.Id, nil
 			}
 		}
+		// check if we have to paginate
 		if listPools.NextToken != nil {
 			nextToken = *listPools.NextToken
 		} else {
