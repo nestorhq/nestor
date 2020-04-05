@@ -2,7 +2,6 @@ package awsapi
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -15,6 +14,12 @@ type CognitoAPI struct {
 	client       *cognitoidentityprovider.CognitoIdentityProvider
 }
 
+// UserPoolInformation description of a user pool
+type UserPoolInformation struct {
+	ID  string
+	arn string
+}
+
 // NewCognitoAPI constructor
 func NewCognitoAPI(session *session.Session, resourceTags *ResourceTags, cognitoRegion string) (*CognitoAPI, error) {
 	var api = CognitoAPI{resourceTags: resourceTags}
@@ -23,9 +28,49 @@ func NewCognitoAPI(session *session.Session, resourceTags *ResourceTags, cognito
 	return &api, nil
 }
 
+func (api *CognitoAPI) getUserPoolInformationAndTags(userPoolID string) (*UserPoolInformation, map[string]*string, error) {
+	var result = UserPoolInformation{ID: userPoolID}
+	info, err := api.client.DescribeUserPool(&cognitoidentityprovider.DescribeUserPoolInput{
+		UserPoolId: &userPoolID,
+	})
+	if err != nil {
+		return &result, nil, err
+	}
+	result.arn = *info.UserPool.Arn
+	return &result, info.UserPool.UserPoolTags, nil
+}
+
+func (api *CognitoAPI) findUserPoolByName(userPoolName string) (string, error) {
+	var nextToken = ""
+	for {
+		var input = cognitoidentityprovider.ListUserPoolsInput{
+			MaxResults: aws.Int64(32),
+		}
+		if len(nextToken) > 0 {
+			input.NextToken = &nextToken
+		}
+
+		listPools, err := api.client.ListUserPools(&input)
+		if err != nil {
+			return "", err
+		}
+		for _, userPool := range listPools.UserPools {
+			if userPool.Name == &userPoolName {
+				return *userPool.Id, nil
+			}
+		}
+		if listPools.NextToken != nil {
+			nextToken = *listPools.NextToken
+		} else {
+			// the pool was not found
+			return "", nil
+		}
+	}
+}
+
 // doc at:
 // https://docs.aws.amazon.com/sdk-for-go/api/service/cognitoidentityprovider/#CreateUserPoolInput
-func (api *CognitoAPI) createUserPool(userPoolName string) {
+func (api *CognitoAPI) doCreateUserPool(userPoolName string) (*UserPoolInformation, error) {
 	input := &cognitoidentityprovider.CreateUserPoolInput{
 		PoolName: &userPoolName,
 		AdminCreateUserConfig: &cognitoidentityprovider.AdminCreateUserConfigType{
@@ -105,58 +150,53 @@ func (api *CognitoAPI) createUserPool(userPoolName string) {
 			AdvancedSecurityMode: aws.String("AUDIT"),
 		},
 		UserPoolTags: aws.StringMap(api.resourceTags.getTagsAsMap()),
+		UsernameAttributes: []*string{
+			aws.String("email"),
+		},
+		UsernameConfiguration: &cognitoidentityprovider.UsernameConfigurationType{
+			CaseSensitive: aws.Bool(false),
+		},
+		VerificationMessageTemplate: &cognitoidentityprovider.VerificationMessageTemplateType{
+			DefaultEmailOption: aws.String("CONFIRM_WITH_CODE"),
+			EmailMessage:       aws.String("Your verification code is {####}"),
+			EmailSubject:       aws.String("Your verification code is {####}"),
+			SmsMessage:         aws.String("Your verification code is {####}"),
+		},
 	}
 
 	result, err := api.client.CreateUserPool(input)
 	if err != nil {
 		fmt.Println("Got error calling CreateUserPool:")
 		fmt.Println(err.Error())
-		os.Exit(1)
+		return nil, err
 	}
 	fmt.Printf("user pool: %v\n", result)
 	fmt.Println("Created the user pool", userPoolName)
+	return &UserPoolInformation{
+		ID:  *result.UserPool.Id,
+		arn: *result.UserPool.Arn,
+	}, nil
 }
 
-/*
-		Schema: &[]*cognitoidentityprovider.SchemaAttributeType{&{
-      Name: "sub",
-      StringAttributeConstraints: {
-        MinLength: "1",
-        MaxLength: "2048"
-      },
-      DeveloperOnlyAttribute: false,
-      Required: true,
-      AttributeDataType: "String",
-      Mutable: false
-    },
-    &{
-      Name: "email",
-      StringAttributeConstraints: {
-        MinLength: "0",
-        MaxLength: "2048"
-      },
-      DeveloperOnlyAttribute: false,
-      Required: true,
-      AttributeDataType: "String",
-      Mutable: true
-    },
-    &{
-      AttributeDataType: "Boolean",
-      DeveloperOnlyAttribute: false,
-      Required: false,
-      Name: "email_verified",
-      Mutable: true
-    },
-    &{
-      Name: "updated_at",
-      NumberAttributeConstraints: {
-        MinValue: "0"
-      },
-      DeveloperOnlyAttribute: false,
-      Required: false,
-      AttributeDataType: "Number",
-      Mutable: true
-    }},
+func (api *CognitoAPI) createUserPool(userPoolName string) (*UserPoolInformation, error) {
+	id, err := api.findUserPoolByName(userPoolName)
+	if err != nil {
+		fmt.Println("Got error calling findUserPoolByName:")
+		fmt.Println(err.Error())
+		return nil, err
 	}
 
-*/
+	if id != "" {
+		info, tags, err := api.getUserPoolInformationAndTags(id)
+		if err != nil {
+			return nil, err
+		}
+		// check tags
+		err2 := api.resourceTags.checkTags(tags)
+		if err2 != nil {
+			return nil, err2
+		}
+		return info, nil
+	}
+	return api.doCreateUserPool(userPoolName)
+}

@@ -27,7 +27,11 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 
 	// 1: user pool
 	var userPoolName = appName + "-" + environment
-	api.CreateUserPool(userPoolName)
+	upr, errup := api.CreateUserPool(userPoolName)
+	if errup != nil {
+		panic(errup)
+	}
+	fmt.Printf("user pool: %v\n", upr)
 
 	// 2: dynamodb tables
 	for _, table := range nestorConfig.Resources.DynamoDbTable {

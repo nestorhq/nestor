@@ -73,6 +73,6 @@ func (api *AwsAPI) CreateMonoTable(tableName string) {
 }
 
 // CreateUserPool create a user pool
-func (api *AwsAPI) CreateUserPool(userPoolName string) {
-	api.cognitoAPI.createUserPool(userPoolName)
+func (api *AwsAPI) CreateUserPool(userPoolName string) (*UserPoolInformation, error) {
+	return api.cognitoAPI.createUserPool(userPoolName)
 }
