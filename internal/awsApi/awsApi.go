@@ -1,12 +1,10 @@
 package awsapi
 
 import (
-	"fmt"
-
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/nestorhq/nestor/internal/reporter"
 )
 
 // AwsAPI api to work on AWS
@@ -20,8 +18,20 @@ type AwsAPI struct {
 
 // NewAwsAPI constructor
 func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, cognitoRegion string) (*AwsAPI, error) {
+	var r0 = reporter.NewReporterM(
+		reporter.NewMessage("Aws API initialization").
+			WithArg("appName", resourceTags.appName).
+			WithArg("environment", resourceTags.environment).
+			WithArg("nestorVersion", resourceTags.nestorVersion).
+			WithArg("profileName", profileName).
+			WithArg("region", region).
+			WithArg("cognitoRegion", cognitoRegion))
+
+	t0 := r0.Start()
+
 	var awsAPI = AwsAPI{profileName: profileName, resourceTags: resourceTags}
 
+	t1 := t0.Sub("create AWS session")
 	sess, err := session.NewSessionWithOptions(session.Options{
 		Profile: profileName,
 		Config: aws.Config{
@@ -29,41 +39,47 @@ func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, co
 		},
 	})
 	if err != nil {
+		t1.Fail(err)
 		return nil, err
 	}
 	awsAPI.session = sess
+	t1.Okr(map[string]string{
+		"region": *sess.Config.Region,
+	})
 
 	//	fmt.Printf("region: %v\n", sess.Config.Endpoint)
 
 	// Create a STS client from just a session.
+	t2 := t0.Sub("create sts client and sts.GetCallerIdentityInput")
 	svc := sts.New(sess)
 	input := &sts.GetCallerIdentityInput{}
 
 	result, err := svc.GetCallerIdentity(input)
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			default:
-				fmt.Println(aerr.Error())
-			}
-		} else {
-			// Print the error, cast err to awserr.Error to get the Code and
-			// Message from an error.
-			fmt.Println(err.Error())
-		}
+		t2.Fail(err)
 		return nil, err
 	}
-	fmt.Println(result)
+	// fmt.Println(result)
+	t2.Okr(map[string]string{
+		"account": *result.Account,
+		"arn":     *result.Arn,
+		"userId":  *result.UserId,
+	})
 
+	t3 := t0.Sub("create dynamoDb API")
 	// initialize different AWS Apis
 	awsAPI.dynamoDbAPI, err = NewDynamoDbAPI(sess, resourceTags)
 	if err != nil {
+		t3.Fail(err)
 		return nil, err
 	}
+	t4 := t0.Sub("create Cognito API")
 	awsAPI.cognitoAPI, err = NewCognitoAPI(sess, resourceTags, cognitoRegion)
 	if err != nil {
+		t4.Fail(err)
 		return nil, err
 	}
+	r0.Ok()
 	return &awsAPI, nil
 }
 
