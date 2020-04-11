@@ -37,9 +37,7 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	fmt.Printf("user pool: %v\n", upr)
 
 	// 2: dynamodb tables
-	for _, table := range nestorConfig.Resources.DynamoDbTable {
-		var tableName = appName + "-" + environment + "-" + table.ID
-		fmt.Printf("tableName: %s\n", tableName)
-		api.CreateMonoTable(tableName)
-	}
+	var tableName = appName + "-" + environment + "-main"
+	fmt.Printf("tableName: %s\n", tableName)
+	api.CreateMonoTable(tableName)
 }

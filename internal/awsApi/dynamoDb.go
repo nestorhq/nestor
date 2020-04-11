@@ -27,6 +27,15 @@ func NewDynamoDbAPI(session *session.Session, resourceTags *ResourceTags) (*Dyna
 func (api *DynamoDbAPI) createMonoTable(tableName string, task *reporter.Task) {
 	t0 := task.SubM(reporter.NewMessage("dynamodb.CreateTableInput").WithArg("tableName", tableName))
 
+	tags := api.resourceTags.getTagsAsTagsWithID("nestor.res.dynamoDbTable.main")
+	dynamodbTags := make([]*dynamodb.Tag, 0, 4)
+	for _, t := range tags {
+		dynamodbTags = append(dynamodbTags, &dynamodb.Tag{
+			Key:   aws.String(t.Key),
+			Value: aws.String(t.Value),
+		})
+	}
+
 	input := &dynamodb.CreateTableInput{
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{
 			{
@@ -53,6 +62,7 @@ func (api *DynamoDbAPI) createMonoTable(tableName string, task *reporter.Task) {
 			WriteCapacityUnits: aws.Int64(10),
 		},
 		TableName: aws.String(tableName),
+		Tags:      dynamodbTags,
 	}
 
 	_, err := api.client.CreateTable(input)

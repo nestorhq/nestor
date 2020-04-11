@@ -1,12 +1,20 @@
 package awsapi
 
-import "errors"
+import (
+	"errors"
+)
 
 // ResourceTags tags associated to created resources
 type ResourceTags struct {
 	nestorVersion string
 	environment   string
 	appName       string
+}
+
+// Tag tag description
+type Tag struct {
+	Key   string
+	Value string
 }
 
 // NewResourceTag constructor
@@ -25,6 +33,36 @@ func (t *ResourceTags) getTagsAsMap() map[string]string {
 		"nv":          t.nestorVersion,
 	}
 	return tags
+}
+
+func (t *ResourceTags) getTagsAsMapWithID(id string) map[string]string {
+	var tags = t.getTagsAsMap()
+	tags["id"] = id
+	return tags
+}
+
+func (t *ResourceTags) getTagsAsTags() []Tag {
+	var result = make([]Tag, 0, 4)
+	result = append(result, Tag{
+		Key:   "appName",
+		Value: t.appName,
+	}, Tag{
+		Key:   "environment",
+		Value: t.environment,
+	}, Tag{
+		Key:   "nv",
+		Value: t.nestorVersion,
+	})
+	return result
+}
+
+func (t *ResourceTags) getTagsAsTagsWithID(id string) []Tag {
+	result := t.getTagsAsTags()
+	result = append(result, Tag{
+		Key:   "id",
+		Value: id,
+	})
+	return result
 }
 
 func (t *ResourceTags) checkTags(tags map[string]*string) error {

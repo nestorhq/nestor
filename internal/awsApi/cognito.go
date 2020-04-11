@@ -151,7 +151,7 @@ func (api *CognitoAPI) doCreateUserPool(userPoolName string, task *reporter.Task
 		UserPoolAddOns: &cognitoidentityprovider.UserPoolAddOnsType{
 			AdvancedSecurityMode: aws.String("AUDIT"),
 		},
-		UserPoolTags: aws.StringMap(api.resourceTags.getTagsAsMap()),
+		UserPoolTags: aws.StringMap(api.resourceTags.getTagsAsMapWithID("nestor.res.cognito.main")),
 		UsernameAttributes: []*string{
 			aws.String("email"),
 		},
