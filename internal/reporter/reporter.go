@@ -24,6 +24,7 @@ type Reporter struct {
 type Task struct {
 	reporter *Reporter
 	level    int
+	lastLog  string
 }
 
 func printMessageAndArgs(indent int, title string, args map[string]string) {
@@ -94,6 +95,10 @@ func NewReporter(title string) *Reporter {
 // Start start the task being reported
 func (reporter *Reporter) Start() *Task {
 	// we log the reporter title
+	if reporter.level == 0 {
+		fmt.Println("")
+	}
+
 	reporter.message.print(reporter.level, true, "")
 
 	var result = Task{
@@ -106,7 +111,13 @@ func (reporter *Reporter) Start() *Task {
 // Ok display the fact that the reporter ends successfully
 func (reporter *Reporter) Ok() {
 	// we log the reporter title
-	reporter.message.print(reporter.level, false, ": SUCCESS")
+	printMessageAndArgs(reporter.level, reporter.message.title+": SUCCESS", nil)
+}
+
+// Okr success with result to display
+func (reporter *Reporter) Okr(result map[string]string) {
+	// we log the reporter title
+	printMessageAndArgs(reporter.level, reporter.message.title+": SUCCESS", result)
 }
 
 // Fail indicates that the reporter failed
@@ -133,6 +144,7 @@ func (task *Task) Sub(title string) *Task {
 // LogM a message in the task
 func (task *Task) LogM(message *Message) *Task {
 	// we log the message title
+	task.lastLog = message.title
 	message.print(task.level, true, "")
 	return task
 }
@@ -146,18 +158,23 @@ func (task *Task) Log(title string) *Task {
 
 // Okr indicates success and print some values
 func (task *Task) Okr(result map[string]string) {
-	printMessageAndArgs(task.level, "SUCCESS:", result)
+	task.reporter.Okr(result)
+	// printMessageAndArgs(task.level, task.lastLog+": SUCCESS", result)
 }
 
 // Ok indicates success
 func (task *Task) Ok() {
-	printMessageAndArgs(task.level, "SUCCESS", nil)
+	task.reporter.Ok()
+	// if task.lastLog != "" {
+	// 	printMessageAndArgs(task.level, task.lastLog+": SUCCESS", nil)
+	// }
 }
 
 // Fail indicates failure
 func (task *Task) Fail(err error) {
-	printMessageAndArgs(task.level, "FAILURE", nil)
-	printError(err)
+	task.reporter.Fail(err)
+	// printMessageAndArgs(task.level, task.lastLog+": FAILURE", nil)
+	// printError(err)
 }
 
 // Experiment experiment

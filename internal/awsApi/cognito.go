@@ -1,11 +1,10 @@
 package awsapi
 
 import (
-	"fmt"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/nestorhq/nestor/internal/reporter"
 )
 
 // CognitoAPI api
@@ -72,7 +71,8 @@ func (api *CognitoAPI) findUserPoolByName(userPoolName string) (string, error) {
 
 // doc at:
 // https://docs.aws.amazon.com/sdk-for-go/api/service/cognitoidentityprovider/#CreateUserPoolInput
-func (api *CognitoAPI) doCreateUserPool(userPoolName string) (*UserPoolInformation, error) {
+func (api *CognitoAPI) doCreateUserPool(userPoolName string, task *reporter.Task) (*UserPoolInformation, error) {
+	t0 := task.SubM(reporter.NewMessage("cognitoidentityprovider.CreateUserPoolInput").WithArg("userPoolName", userPoolName))
 	input := &cognitoidentityprovider.CreateUserPoolInput{
 		PoolName: &userPoolName,
 		AdminCreateUserConfig: &cognitoidentityprovider.AdminCreateUserConfigType{
@@ -168,37 +168,49 @@ func (api *CognitoAPI) doCreateUserPool(userPoolName string) (*UserPoolInformati
 
 	result, err := api.client.CreateUserPool(input)
 	if err != nil {
-		fmt.Println("Got error calling CreateUserPool:")
-		fmt.Println(err.Error())
+		t0.Fail(err)
 		return nil, err
 	}
-	fmt.Printf("user pool: %v\n", result)
-	fmt.Println("Created the user pool", userPoolName)
+	t0.Okr(map[string]string{
+		"ID":  *result.UserPool.Id,
+		"arn": *result.UserPool.Arn,
+	})
+	// fmt.Printf("user pool: %v\n", result)
 	return &UserPoolInformation{
 		ID:  *result.UserPool.Id,
 		arn: *result.UserPool.Arn,
 	}, nil
 }
 
-func (api *CognitoAPI) createUserPool(userPoolName string) (*UserPoolInformation, error) {
+func (api *CognitoAPI) createUserPool(userPoolName string, task *reporter.Task) (*UserPoolInformation, error) {
+	t0 := task.SubM(reporter.NewMessage("findUserPoolByName").WithArg("userPoolName", userPoolName))
 	id, err := api.findUserPoolByName(userPoolName)
 	if err != nil {
-		fmt.Println("Got error calling findUserPoolByName:")
-		fmt.Println(err.Error())
+		t0.Fail(err)
 		return nil, err
 	}
 
 	if id != "" {
+		t0.Log("user pool already exists")
+		t0.Ok()
+		t1 := task.SubM(reporter.NewMessage("getUserPoolInformationAndTags").WithArg("id", id))
 		info, tags, err := api.getUserPoolInformationAndTags(id)
 		if err != nil {
+			t1.Fail(err)
 			return nil, err
 		}
 		// check tags
+		t2 := task.Sub("checkTags")
 		err2 := api.resourceTags.checkTags(tags)
 		if err2 != nil {
+			t2.Fail(err2)
 			return nil, err2
 		}
+		task.Ok()
 		return info, nil
 	}
-	return api.doCreateUserPool(userPoolName)
+	t0.Log("user pool does not exist")
+	t0.Ok()
+	t3 := task.SubM(reporter.NewMessage("doCreateUserPool").WithArg("userPoolName", userPoolName))
+	return api.doCreateUserPool(userPoolName, t3)
 }

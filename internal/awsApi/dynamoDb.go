@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/nestorhq/nestor/internal/reporter"
 )
 
 // DynamoDbAPI Access to DynamoDb API
@@ -23,7 +24,8 @@ func NewDynamoDbAPI(session *session.Session, resourceTags *ResourceTags) (*Dyna
 	return &api, nil
 }
 
-func (api *DynamoDbAPI) createMonoTable(tableName string) {
+func (api *DynamoDbAPI) createMonoTable(tableName string, task *reporter.Task) {
+	t0 := task.SubM(reporter.NewMessage("dynamodb.CreateTableInput").WithArg("tableName", tableName))
 
 	input := &dynamodb.CreateTableInput{
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{
@@ -55,8 +57,7 @@ func (api *DynamoDbAPI) createMonoTable(tableName string) {
 
 	_, err := api.client.CreateTable(input)
 	if err != nil {
-		fmt.Println("Got error calling CreateTable:")
-		fmt.Println(err.Error())
+		t0.Fail(err)
 		os.Exit(1)
 	}
 

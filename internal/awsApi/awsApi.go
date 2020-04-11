@@ -83,12 +83,34 @@ func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, co
 	return &awsAPI, nil
 }
 
-// CreateMonoTable create a mongoDb table following the mono-table schema
-func (api *AwsAPI) CreateMonoTable(tableName string) {
-	api.dynamoDbAPI.createMonoTable(tableName)
-}
-
 // CreateUserPool create a user pool
 func (api *AwsAPI) CreateUserPool(userPoolName string) (*UserPoolInformation, error) {
-	return api.cognitoAPI.createUserPool(userPoolName)
+	var r0 = reporter.NewReporterM(
+		reporter.NewMessage("Aws API: CreateUserPool").
+			WithArg("userPoolName", userPoolName))
+
+	t0 := r0.Start()
+
+	up, err := api.cognitoAPI.createUserPool(userPoolName, t0)
+	if err != nil {
+		t0.Fail(err)
+	} else {
+		t0.Okr(map[string]string{
+			"id":  up.ID,
+			"arn": up.arn,
+		})
+	}
+
+	return up, err
+}
+
+// CreateMonoTable create a mongoDb table following the mono-table schema
+func (api *AwsAPI) CreateMonoTable(tableName string) {
+	var r0 = reporter.NewReporterM(
+		reporter.NewMessage("Aws API: CreateMonoTable").
+			WithArg("tableName", tableName))
+
+	t0 := r0.Start()
+
+	api.dynamoDbAPI.createMonoTable(tableName, t0)
 }
