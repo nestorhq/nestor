@@ -5,6 +5,7 @@ import (
 
 	"github.com/nestorhq/nestor/internal/awsapi"
 	"github.com/nestorhq/nestor/internal/config"
+	"github.com/nestorhq/nestor/internal/reporter"
 )
 
 // CliProvision processing for provision CLI command
@@ -14,6 +15,8 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	fmt.Printf(" environment: %s\n", environment)
 	fmt.Printf(" appName    : %s\n", appName)
 	fmt.Printf("config: %v\n", nestorConfig)
+
+	var _ = reporter.NewReporterM(reporter.NewMessage("command: provision").WithArg("environment", environment)).Start()
 
 	// TODO: hard coded
 	resourceTags := awsapi.NewResourceTag("1", environment, appName)
