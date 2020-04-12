@@ -9,12 +9,13 @@ import (
 
 // AwsAPI api to work on AWS
 type AwsAPI struct {
-	profileName  string
-	session      *session.Session
-	resourceTags *ResourceTags
-	dynamoDbAPI  *DynamoDbAPI
-	cognitoAPI   *CognitoAPI
-	lambdaAPI    *LambdaAPI
+	profileName    string
+	session        *session.Session
+	resourceTags   *ResourceTags
+	dynamoDbAPI    *DynamoDbAPI
+	cognitoAPI     *CognitoAPI
+	lambdaAPI      *LambdaAPI
+	eventBridgeAPI *EventBridgeAPI
 }
 
 // NewAwsAPI constructor
@@ -84,6 +85,13 @@ func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, co
 		return nil, err
 	}
 
+	t6 := t0.Sub("create EventBridge API")
+	awsAPI.eventBridgeAPI, err = NewEventBridgeAPI(sess, resourceTags)
+	if err != nil {
+		t6.Fail(err)
+		return nil, err
+	}
+
 	t0.Ok()
 	return &awsAPI, nil
 }
@@ -114,6 +122,19 @@ func (api *AwsAPI) CreateMonoTable(tableName string, t *reporter.Task) (*TableIn
 			WithArg("tableName", tableName))
 
 	res, error := api.dynamoDbAPI.createMonoTable(tableName, t0)
+	if error != nil {
+		t0.Fail(error)
+	}
+	return res, error
+}
+
+// CreateEventBus create event bus
+func (api *AwsAPI) CreateEventBus(eventBusName string, t *reporter.Task) (*EventBusInformation, error) {
+	t0 := t.SubM(
+		reporter.NewMessage("Aws API: CreateEventBus").
+			WithArg("eventBusName", eventBusName))
+
+	res, error := api.eventBridgeAPI.createEventBus(eventBusName, t0)
 	if error != nil {
 		t0.Fail(error)
 	}

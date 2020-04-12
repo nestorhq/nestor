@@ -2,6 +2,8 @@ package awsapi
 
 import (
 	"errors"
+
+	"github.com/aws/aws-sdk-go/aws/awserr"
 )
 
 // ResourceTags tags associated to created resources
@@ -73,7 +75,14 @@ func (t *ResourceTags) checkTags(tags map[string]*string, id string) error {
 		return errors.New("resource exist with bad tag(environment)")
 	}
 	if *tags["id"] != id {
-		return errors.New("resource exist with bad tag(environment)")
+		return errors.New("resource exist with bad tag(id)")
 	}
 	return nil
+}
+
+func getAwsErrorCode(err error) string {
+	if aerr, ok := err.(awserr.Error); ok {
+		return aerr.Code()
+	}
+	return ""
 }

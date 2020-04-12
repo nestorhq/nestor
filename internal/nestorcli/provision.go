@@ -32,22 +32,32 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	// 1: user pool
 	var userPoolName = appName + "-" + environment
 	t1 := t.SubM(reporter.NewMessage("create user pool").WithArg("userPoolName", userPoolName))
-	_, errup := api.CreateUserPool(userPoolName, t1)
-	if errup != nil {
-		t1.Fail(errup)
-		panic(errup)
+	_, err1 := api.CreateUserPool(userPoolName, t1)
+	if err1 != nil {
+		t1.Fail(err1)
+		panic(err1)
 	}
 	t1.Ok()
 
 	// 2: dynamodb tables
 	var tableName = appName + "-" + environment + "-main"
 	t2 := t.SubM(reporter.NewMessage("create dynamodb table").WithArg("tableName", tableName))
-	_, errdynamo := api.CreateMonoTable(tableName, t2)
-	if errdynamo != nil {
-		t2.Fail(errdynamo)
-		panic(errdynamo)
+	_, err2 := api.CreateMonoTable(tableName, t2)
+	if err2 != nil {
+		t2.Fail(err2)
+		panic(err2)
 	}
 	t2.Ok()
+
+	// 3: event bus
+	var eventBusName = appName + "-" + environment + "-main"
+	t3 := t.SubM(reporter.NewMessage("create event bus").WithArg("eventBusName", eventBusName))
+	_, err3 := api.CreateEventBus(eventBusName, t3)
+	if err3 != nil {
+		t3.Fail(err3)
+		panic(err3)
+	}
+	t3.Ok()
 
 	t.Ok()
 }

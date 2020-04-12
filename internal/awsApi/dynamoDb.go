@@ -116,6 +116,9 @@ func (api *DynamoDbAPI) checkTableExistence(tableName string, task *reporter.Tas
 	}
 	result, err := api.client.DescribeTable(input)
 	if err != nil {
+		if getAwsErrorCode(err) == "ResourceNotFoundException" {
+			return nil, nil
+		}
 		t0.Fail(err)
 		return nil, err
 	}
