@@ -1,7 +1,7 @@
 package awsapi
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 )
@@ -39,7 +39,7 @@ func (t *ResourceTags) getTagsAsMap() map[string]string {
 
 func (t *ResourceTags) getTagsAsMapWithID(id string) map[string]string {
 	var tags = t.getTagsAsMap()
-	tags["id"] = id
+	tags["nestorId"] = id
 	return tags
 }
 
@@ -61,21 +61,36 @@ func (t *ResourceTags) getTagsAsTags() []Tag {
 func (t *ResourceTags) getTagsAsTagsWithID(id string) []Tag {
 	result := t.getTagsAsTags()
 	result = append(result, Tag{
-		Key:   "id",
+		Key:   "nestorId",
 		Value: id,
 	})
 	return result
 }
 
+func (t *ResourceTags) checkTagValue(tags map[string]*string, tagName string, expected string) error {
+	if pval, ok := tags[tagName]; ok {
+		if *pval != expected {
+			return fmt.Errorf("resource exist with bad tag(%s) expected: %s, actual: %s", tagName, expected, *pval)
+		}
+	} else {
+		return fmt.Errorf("missing tag (%s) expected: %s", tagName, expected)
+	}
+	return nil
+}
+
 func (t *ResourceTags) checkTags(tags map[string]*string, id string) error {
-	if *tags["appName"] != t.appName {
-		return errors.New("resource exist with bad tag(appName)")
+	var err error
+	err = t.checkTagValue(tags, "appName", t.appName)
+	if err != nil {
+		return err
 	}
-	if *tags["environment"] != t.environment {
-		return errors.New("resource exist with bad tag(environment)")
+	err = t.checkTagValue(tags, "environment", t.environment)
+	if err != nil {
+		return err
 	}
-	if *tags["id"] != id {
-		return errors.New("resource exist with bad tag(id)")
+	err = t.checkTagValue(tags, "nestorId", id)
+	if err != nil {
+		return err
 	}
 	return nil
 }

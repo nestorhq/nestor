@@ -71,7 +71,7 @@ func (api *CognitoAPI) findUserPoolByName(userPoolName string) (string, error) {
 
 // doc at:
 // https://docs.aws.amazon.com/sdk-for-go/api/service/cognitoidentityprovider/#CreateUserPoolInput
-func (api *CognitoAPI) doCreateUserPool(userPoolName string, task *reporter.Task) (*UserPoolInformation, error) {
+func (api *CognitoAPI) doCreateUserPool(userPoolName string, id string, task *reporter.Task) (*UserPoolInformation, error) {
 	t0 := task.SubM(reporter.NewMessage("cognitoidentityprovider.CreateUserPoolInput").WithArg("userPoolName", userPoolName))
 	input := &cognitoidentityprovider.CreateUserPoolInput{
 		PoolName: &userPoolName,
@@ -151,7 +151,7 @@ func (api *CognitoAPI) doCreateUserPool(userPoolName string, task *reporter.Task
 		UserPoolAddOns: &cognitoidentityprovider.UserPoolAddOnsType{
 			AdvancedSecurityMode: aws.String("AUDIT"),
 		},
-		UserPoolTags: aws.StringMap(api.resourceTags.getTagsAsMapWithID("nestor.res.cognito.main")),
+		UserPoolTags: aws.StringMap(api.resourceTags.getTagsAsMapWithID(id)),
 		UsernameAttributes: []*string{
 			aws.String("email"),
 		},
@@ -182,7 +182,7 @@ func (api *CognitoAPI) doCreateUserPool(userPoolName string, task *reporter.Task
 	}, nil
 }
 
-func (api *CognitoAPI) createUserPool(userPoolName string, t *reporter.Task) (*UserPoolInformation, error) {
+func (api *CognitoAPI) createUserPool(userPoolName string, nestorID string, t *reporter.Task) (*UserPoolInformation, error) {
 	t0 := t.SubM(reporter.NewMessage("findUserPoolByName").WithArg("userPoolName", userPoolName))
 	id, err := api.findUserPoolByName(userPoolName)
 	if err != nil {
@@ -201,7 +201,7 @@ func (api *CognitoAPI) createUserPool(userPoolName string, t *reporter.Task) (*U
 		}
 		// check tags
 		t2 := t.SubM(reporter.NewMessage("checkTags").WithArgs(tags))
-		err2 := api.resourceTags.checkTags(tags, "nestor.res.cognito.main")
+		err2 := api.resourceTags.checkTags(tags, nestorID)
 		if err2 != nil {
 			t2.Fail(err2)
 			return nil, err2
@@ -212,5 +212,5 @@ func (api *CognitoAPI) createUserPool(userPoolName string, t *reporter.Task) (*U
 	t0.Log("user pool does not exist")
 	t0.Ok()
 	t3 := t.SubM(reporter.NewMessage("doCreateUserPool").WithArg("userPoolName", userPoolName))
-	return api.doCreateUserPool(userPoolName, t3)
+	return api.doCreateUserPool(userPoolName, nestorID, t3)
 }

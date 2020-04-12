@@ -16,6 +16,7 @@ type AwsAPI struct {
 	cognitoAPI     *CognitoAPI
 	lambdaAPI      *LambdaAPI
 	eventBridgeAPI *EventBridgeAPI
+	s3API          *S3API
 }
 
 // NewAwsAPI constructor
@@ -92,17 +93,24 @@ func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, co
 		return nil, err
 	}
 
+	t7 := t0.Sub("create S3 API")
+	awsAPI.s3API, err = NewS3API(sess, resourceTags)
+	if err != nil {
+		t7.Fail(err)
+		return nil, err
+	}
+
 	t0.Ok()
 	return &awsAPI, nil
 }
 
 // CreateUserPool create a user pool
-func (api *AwsAPI) CreateUserPool(userPoolName string, t *reporter.Task) (*UserPoolInformation, error) {
+func (api *AwsAPI) CreateUserPool(userPoolName string, id string, t *reporter.Task) (*UserPoolInformation, error) {
 	t0 := t.SubM(
 		reporter.NewMessage("Aws API: CreateUserPool").
 			WithArg("userPoolName", userPoolName))
 
-	up, err := api.cognitoAPI.createUserPool(userPoolName, t0)
+	up, err := api.cognitoAPI.createUserPool(userPoolName, id, t0)
 	if err != nil {
 		t0.Fail(err)
 	} else {
@@ -116,12 +124,12 @@ func (api *AwsAPI) CreateUserPool(userPoolName string, t *reporter.Task) (*UserP
 }
 
 // CreateMonoTable create a mongoDb table following the mono-table schema
-func (api *AwsAPI) CreateMonoTable(tableName string, t *reporter.Task) (*TableInformation, error) {
+func (api *AwsAPI) CreateMonoTable(tableName string, id string, t *reporter.Task) (*TableInformation, error) {
 	t0 := t.SubM(
 		reporter.NewMessage("Aws API: CreateMonoTable").
 			WithArg("tableName", tableName))
 
-	res, error := api.dynamoDbAPI.createMonoTable(tableName, t0)
+	res, error := api.dynamoDbAPI.createMonoTable(tableName, id, t0)
 	if error != nil {
 		t0.Fail(error)
 	}
@@ -129,12 +137,25 @@ func (api *AwsAPI) CreateMonoTable(tableName string, t *reporter.Task) (*TableIn
 }
 
 // CreateEventBus create event bus
-func (api *AwsAPI) CreateEventBus(eventBusName string, t *reporter.Task) (*EventBusInformation, error) {
+func (api *AwsAPI) CreateEventBus(eventBusName string, id string, t *reporter.Task) (*EventBusInformation, error) {
 	t0 := t.SubM(
 		reporter.NewMessage("Aws API: CreateEventBus").
 			WithArg("eventBusName", eventBusName))
 
-	res, error := api.eventBridgeAPI.createEventBus(eventBusName, t0)
+	res, error := api.eventBridgeAPI.createEventBus(eventBusName, id, t0)
+	if error != nil {
+		t0.Fail(error)
+	}
+	return res, error
+}
+
+// CreateBucket create bucket
+func (api *AwsAPI) CreateBucket(bucketName string, id string, t *reporter.Task) (*S3Information, error) {
+	t0 := t.SubM(
+		reporter.NewMessage("Aws API: CreateBucket").
+			WithArg("bucketName", bucketName))
+
+	res, error := api.s3API.createBucket(bucketName, id, t0)
 	if error != nil {
 		t0.Fail(error)
 	}

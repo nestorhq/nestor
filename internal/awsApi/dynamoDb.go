@@ -28,10 +28,10 @@ func NewDynamoDbAPI(session *session.Session, resourceTags *ResourceTags) (*Dyna
 	return &api, nil
 }
 
-func (api *DynamoDbAPI) doCreateMonoTable(tableName string, task *reporter.Task) (*TableInformation, error) {
+func (api *DynamoDbAPI) doCreateMonoTable(tableName string, id string, task *reporter.Task) (*TableInformation, error) {
 	t0 := task.SubM(reporter.NewMessage("dynamodb.CreateTableInput").WithArg("tableName", tableName))
 
-	tags := api.resourceTags.getTagsAsTagsWithID("nestor.res.dynamoDbTable.main")
+	tags := api.resourceTags.getTagsAsTagsWithID(id)
 	dynamodbTags := make([]*dynamodb.Tag, 0, 4)
 	for _, t := range tags {
 		dynamodbTags = append(dynamodbTags, &dynamodb.Tag{
@@ -82,7 +82,7 @@ func (api *DynamoDbAPI) doCreateMonoTable(tableName string, task *reporter.Task)
 	}, nil
 }
 
-func (api *DynamoDbAPI) checkTableTags(tableArn string, task *reporter.Task) error {
+func (api *DynamoDbAPI) checkTableTags(tableArn string, id string, task *reporter.Task) error {
 	t0 := task.SubM(reporter.NewMessage("api.client.ListTagsOfResource").WithArg("tableArn", tableArn))
 	input := &dynamodb.ListTagsOfResourceInput{
 		ResourceArn: aws.String(tableArn),
@@ -100,7 +100,7 @@ func (api *DynamoDbAPI) checkTableTags(tableArn string, task *reporter.Task) err
 	}
 	// check tags
 	t1 := task.SubM(reporter.NewMessage("checkTags").WithArgs(tagsToCheck))
-	err2 := api.resourceTags.checkTags(tagsToCheck, "nestor.res.dynamoDbTable.main")
+	err2 := api.resourceTags.checkTags(tagsToCheck, id)
 	if err2 != nil {
 		t1.Fail(err2)
 		return err2
@@ -135,7 +135,7 @@ func (api *DynamoDbAPI) checkTableExistence(tableName string, task *reporter.Tas
 	}, nil
 }
 
-func (api *DynamoDbAPI) checkTableExistenceAndTags(tableName string, task *reporter.Task) (*TableInformation, error) {
+func (api *DynamoDbAPI) checkTableExistenceAndTags(tableName string, id string, task *reporter.Task) (*TableInformation, error) {
 	t0 := task.SubM(reporter.NewMessage("checkTableExistenceAndTags").WithArg("tableName", tableName))
 	tableInformation, err := api.checkTableExistence(tableName, t0)
 	if err != nil {
@@ -148,7 +148,7 @@ func (api *DynamoDbAPI) checkTableExistenceAndTags(tableName string, task *repor
 	}
 
 	t1 := task.SubM(reporter.NewMessage("checkTableTags").WithArg("tableName", tableName))
-	err2 := api.checkTableTags(tableInformation.arn, t1)
+	err2 := api.checkTableTags(tableInformation.arn, id, t1)
 	if err2 != nil {
 		t1.Fail(err2)
 		return nil, err2
@@ -156,11 +156,11 @@ func (api *DynamoDbAPI) checkTableExistenceAndTags(tableName string, task *repor
 	return tableInformation, nil
 }
 
-func (api *DynamoDbAPI) createMonoTable(tableName string, task *reporter.Task) (*TableInformation, error) {
+func (api *DynamoDbAPI) createMonoTable(tableName string, id string, task *reporter.Task) (*TableInformation, error) {
 	t0 := task.SubM(reporter.NewMessage("createMonoTable").WithArg("tableName", tableName))
 
 	t1 := t0.Sub("check if table exists")
-	tableInformation, err := api.checkTableExistenceAndTags(tableName, t1)
+	tableInformation, err := api.checkTableExistenceAndTags(tableName, id, t1)
 	if err != nil {
 		t1.Fail(err)
 		return nil, err
@@ -178,7 +178,7 @@ func (api *DynamoDbAPI) createMonoTable(tableName string, task *reporter.Task) (
 	}
 
 	t2 := t0.Sub("table does not exist - creating it")
-	result, err := api.doCreateMonoTable(tableName, t2)
+	result, err := api.doCreateMonoTable(tableName, id, t2)
 	if err != nil {
 		t2.Fail(err)
 	}
