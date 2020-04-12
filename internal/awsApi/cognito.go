@@ -200,12 +200,13 @@ func (api *CognitoAPI) createUserPool(userPoolName string, task *reporter.Task) 
 			return nil, err
 		}
 		// check tags
-		t2 := task.Sub("checkTags")
+		t2 := task.SubM(reporter.NewMessage("checkTags").WithArgs(tags))
 		err2 := api.resourceTags.checkTags(tags)
 		if err2 != nil {
 			t2.Fail(err2)
 			return nil, err2
 		}
+		t2.Ok()
 		task.Ok()
 		return info, nil
 	}

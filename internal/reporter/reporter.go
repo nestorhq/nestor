@@ -33,10 +33,10 @@ func printMessageAndArgs(indent int, title string, args map[string]string) {
 		tab += "  "
 	}
 	fmt.Print(tab)
-	fmt.Println(term.Cyan(title))
+	fmt.Println(term.Yellow(title))
 	if args != nil {
 		for name, value := range args {
-			fmt.Printf(term.Bluef("  %s- %s: %s\n", tab, name, value))
+			fmt.Printf(term.Cyanf("  %s- %s: %s\n", tab, name, value))
 		}
 	}
 }
@@ -67,6 +67,14 @@ func NewMessage(title string) *Message {
 // WithArg add arg to task description
 func (message *Message) WithArg(name string, value string) *Message {
 	message.args[name] = value
+	return message
+}
+
+// WithArgs add arg to task description
+func (message *Message) WithArgs(args map[string]*string) *Message {
+	for key, element := range args {
+		message.args[key] = *element
+	}
 	return message
 }
 
