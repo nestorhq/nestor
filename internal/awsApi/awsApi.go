@@ -14,11 +14,13 @@ type AwsAPI struct {
 	resourceTags *ResourceTags
 	dynamoDbAPI  *DynamoDbAPI
 	cognitoAPI   *CognitoAPI
+	lambdaAPI    *LambdaAPI
 }
 
 // NewAwsAPI constructor
-func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, cognitoRegion string) (*AwsAPI, error) {
-	var r0 = reporter.NewReporterM(
+func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, cognitoRegion string, t *reporter.Task) (*AwsAPI, error) {
+	t0 := t.Sub("create Aws API")
+	t0.LogM(
 		reporter.NewMessage("Aws API initialization").
 			WithArg("appName", resourceTags.appName).
 			WithArg("environment", resourceTags.environment).
@@ -26,8 +28,6 @@ func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, co
 			WithArg("profileName", profileName).
 			WithArg("region", region).
 			WithArg("cognitoRegion", cognitoRegion))
-
-	t0 := r0.Start()
 
 	var awsAPI = AwsAPI{profileName: profileName, resourceTags: resourceTags}
 
@@ -46,8 +46,6 @@ func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, co
 	t1.Okr(map[string]string{
 		"region": *sess.Config.Region,
 	})
-
-	//	fmt.Printf("region: %v\n", sess.Config.Endpoint)
 
 	// Create a STS client from just a session.
 	t2 := t0.Sub("create sts client and sts.GetCallerIdentityInput")
@@ -79,17 +77,22 @@ func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, co
 		t4.Fail(err)
 		return nil, err
 	}
-	r0.Ok()
+	t5 := t0.Sub("create Lambda API")
+	awsAPI.lambdaAPI, err = NewLambdaAPI(sess, resourceTags)
+	if err != nil {
+		t5.Fail(err)
+		return nil, err
+	}
+
+	t0.Ok()
 	return &awsAPI, nil
 }
 
 // CreateUserPool create a user pool
-func (api *AwsAPI) CreateUserPool(userPoolName string) (*UserPoolInformation, error) {
-	var r0 = reporter.NewReporterM(
+func (api *AwsAPI) CreateUserPool(userPoolName string, t *reporter.Task) (*UserPoolInformation, error) {
+	t0 := t.SubM(
 		reporter.NewMessage("Aws API: CreateUserPool").
 			WithArg("userPoolName", userPoolName))
-
-	t0 := r0.Start()
 
 	up, err := api.cognitoAPI.createUserPool(userPoolName, t0)
 	if err != nil {
@@ -105,12 +108,14 @@ func (api *AwsAPI) CreateUserPool(userPoolName string) (*UserPoolInformation, er
 }
 
 // CreateMonoTable create a mongoDb table following the mono-table schema
-func (api *AwsAPI) CreateMonoTable(tableName string) {
-	var r0 = reporter.NewReporterM(
+func (api *AwsAPI) CreateMonoTable(tableName string, t *reporter.Task) (*TableInformation, error) {
+	t0 := t.SubM(
 		reporter.NewMessage("Aws API: CreateMonoTable").
 			WithArg("tableName", tableName))
 
-	t0 := r0.Start()
-
-	api.dynamoDbAPI.createMonoTable(tableName, t0)
+	res, error := api.dynamoDbAPI.createMonoTable(tableName, t0)
+	if error != nil {
+		t0.Fail(error)
+	}
+	return res, error
 }

@@ -11,18 +11,19 @@ import (
 // CliProvision processing for provision CLI command
 func CliProvision(environment string, nestorConfig *config.Config) {
 	var appName = nestorConfig.App.Name
-	fmt.Printf("Provision:\n")
-	fmt.Printf(" environment: %s\n", environment)
-	fmt.Printf(" appName    : %s\n", appName)
-	fmt.Printf("config: %v\n", nestorConfig)
 
-	var _ = reporter.NewReporterM(reporter.NewMessage("command: provision").WithArg("environment", environment)).Start()
+	var t = reporter.NewReporterM(reporter.NewMessage("command: provision").
+		WithArg("environment", environment).
+		WithArg("appName", appName).
+		WithArg("config", fmt.Sprintf("%v", nestorConfig))).
+		Start()
 
 	// TODO: hard coded
 	resourceTags := awsapi.NewResourceTag("1", environment, appName)
 
 	// TODO: hard coded
-	api, err := awsapi.NewAwsAPI("sls", resourceTags, "us-west-1", "us-west-2")
+	t0 := t.Sub("Initialize aws API")
+	api, err := awsapi.NewAwsAPI("sls", resourceTags, "us-west-1", "us-west-2", t0)
 
 	if err != nil {
 		panic(err)
@@ -30,14 +31,23 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 
 	// 1: user pool
 	var userPoolName = appName + "-" + environment
-	upr, errup := api.CreateUserPool(userPoolName)
+	t1 := t.SubM(reporter.NewMessage("create user pool").WithArg("userPoolName", userPoolName))
+	_, errup := api.CreateUserPool(userPoolName, t1)
 	if errup != nil {
+		t1.Fail(errup)
 		panic(errup)
 	}
-	fmt.Printf("user pool: %v\n", upr)
+	t1.Ok()
 
 	// 2: dynamodb tables
 	var tableName = appName + "-" + environment + "-main"
-	fmt.Printf("tableName: %s\n", tableName)
-	api.CreateMonoTable(tableName)
+	t2 := t.SubM(reporter.NewMessage("create dynamodb table").WithArg("tableName", tableName))
+	_, errdynamo := api.CreateMonoTable(tableName, t2)
+	if errdynamo != nil {
+		t2.Fail(errdynamo)
+		panic(errdynamo)
+	}
+	t2.Ok()
+
+	t.Ok()
 }

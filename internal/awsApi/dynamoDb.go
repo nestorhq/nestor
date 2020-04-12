@@ -1,8 +1,6 @@
 package awsapi
 
 import (
-	"fmt"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -76,7 +74,7 @@ func (api *DynamoDbAPI) doCreateMonoTable(tableName string, task *reporter.Task)
 		t0.Fail(err)
 		return nil, err
 	}
-	fmt.Printf("result: %v\n", result)
+	// fmt.Printf("result: %v\n", result)
 	return &TableInformation{
 		ID:        *result.TableDescription.TableId,
 		arn:       *result.TableDescription.TableArn,
