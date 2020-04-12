@@ -100,7 +100,7 @@ func (api *DynamoDbAPI) checkTableTags(tableArn string, task *reporter.Task) err
 	}
 	// check tags
 	t1 := task.SubM(reporter.NewMessage("checkTags").WithArgs(tagsToCheck))
-	err2 := api.resourceTags.checkTags(tagsToCheck)
+	err2 := api.resourceTags.checkTags(tagsToCheck, "nestor.res.dynamoDbTable.main")
 	if err2 != nil {
 		t1.Fail(err2)
 		return err2

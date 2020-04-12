@@ -201,7 +201,7 @@ func (api *CognitoAPI) createUserPool(userPoolName string, t *reporter.Task) (*U
 		}
 		// check tags
 		t2 := t.SubM(reporter.NewMessage("checkTags").WithArgs(tags))
-		err2 := api.resourceTags.checkTags(tags)
+		err2 := api.resourceTags.checkTags(tags, "nestor.res.cognito.main")
 		if err2 != nil {
 			t2.Fail(err2)
 			return nil, err2
