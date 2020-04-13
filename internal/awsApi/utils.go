@@ -78,7 +78,7 @@ func (t *ResourceTags) checkTagValue(tags map[string]*string, tagName string, ex
 	return nil
 }
 
-func (t *ResourceTags) checkTags(tags map[string]*string, id string) error {
+func (t *ResourceTags) checkTags(tags map[string]*string, nestorID string) error {
 	var err error
 	err = t.checkTagValue(tags, "appName", t.appName)
 	if err != nil {
@@ -88,7 +88,7 @@ func (t *ResourceTags) checkTags(tags map[string]*string, id string) error {
 	if err != nil {
 		return err
 	}
-	err = t.checkTagValue(tags, "nestorId", id)
+	err = t.checkTagValue(tags, "nestorId", nestorID)
 	if err != nil {
 		return err
 	}

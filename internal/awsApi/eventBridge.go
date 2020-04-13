@@ -27,10 +27,10 @@ func NewEventBridgeAPI(session *session.Session, resourceTags *ResourceTags) (*E
 	return &api, nil
 }
 
-func (api *EventBridgeAPI) doCreateEventBus(eventBusName string, id string, task *reporter.Task) (*EventBusInformation, error) {
+func (api *EventBridgeAPI) doCreateEventBus(eventBusName string, nestorID string, task *reporter.Task) (*EventBusInformation, error) {
 	t0 := task.SubM(reporter.NewMessage("eventbridge.CreateEventBus").WithArg("eventBusName", eventBusName))
 
-	tags := api.resourceTags.getTagsAsTagsWithID(id)
+	tags := api.resourceTags.getTagsAsTagsWithID(nestorID)
 	eventBusTags := make([]*eventbridge.Tag, 0, 4)
 	for _, t := range tags {
 		eventBusTags = append(eventBusTags, &eventbridge.Tag{

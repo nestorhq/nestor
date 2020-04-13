@@ -105,12 +105,12 @@ func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, co
 }
 
 // CreateUserPool create a user pool
-func (api *AwsAPI) CreateUserPool(userPoolName string, id string, t *reporter.Task) (*UserPoolInformation, error) {
+func (api *AwsAPI) CreateUserPool(userPoolName string, nestorID string, t *reporter.Task) (*UserPoolInformation, error) {
 	t0 := t.SubM(
 		reporter.NewMessage("Aws API: CreateUserPool").
 			WithArg("userPoolName", userPoolName))
 
-	up, err := api.cognitoAPI.createUserPool(userPoolName, id, t0)
+	up, err := api.cognitoAPI.createUserPool(userPoolName, nestorID, t0)
 	if err != nil {
 		t0.Fail(err)
 	} else {
