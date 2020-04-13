@@ -124,12 +124,12 @@ func (api *AwsAPI) CreateUserPool(userPoolName string, nestorID string, t *repor
 }
 
 // CreateMonoTable create a mongoDb table following the mono-table schema
-func (api *AwsAPI) CreateMonoTable(tableName string, id string, t *reporter.Task) (*TableInformation, error) {
+func (api *AwsAPI) CreateMonoTable(tableName string, nestorID string, t *reporter.Task) (*TableInformation, error) {
 	t0 := t.SubM(
 		reporter.NewMessage("Aws API: CreateMonoTable").
 			WithArg("tableName", tableName))
 
-	res, error := api.dynamoDbAPI.createMonoTable(tableName, id, t0)
+	res, error := api.dynamoDbAPI.createMonoTable(tableName, nestorID, t0)
 	if error != nil {
 		t0.Fail(error)
 	}
@@ -137,12 +137,12 @@ func (api *AwsAPI) CreateMonoTable(tableName string, id string, t *reporter.Task
 }
 
 // CreateEventBus create event bus
-func (api *AwsAPI) CreateEventBus(eventBusName string, id string, t *reporter.Task) (*EventBusInformation, error) {
+func (api *AwsAPI) CreateEventBus(eventBusName string, nestorID string, t *reporter.Task) (*EventBusInformation, error) {
 	t0 := t.SubM(
 		reporter.NewMessage("Aws API: CreateEventBus").
 			WithArg("eventBusName", eventBusName))
 
-	res, error := api.eventBridgeAPI.createEventBus(eventBusName, id, t0)
+	res, error := api.eventBridgeAPI.createEventBus(eventBusName, nestorID, t0)
 	if error != nil {
 		t0.Fail(error)
 	}
@@ -150,12 +150,12 @@ func (api *AwsAPI) CreateEventBus(eventBusName string, id string, t *reporter.Ta
 }
 
 // CreateBucket create bucket
-func (api *AwsAPI) CreateBucket(bucketName string, id string, t *reporter.Task) (*S3Information, error) {
+func (api *AwsAPI) CreateBucket(bucketName string, nestorID string, t *reporter.Task) (*S3Information, error) {
 	t0 := t.SubM(
 		reporter.NewMessage("Aws API: CreateBucket").
 			WithArg("bucketName", bucketName))
 
-	res, error := api.s3API.createBucket(bucketName, id, t0)
+	res, error := api.s3API.createBucket(bucketName, nestorID, t0)
 	if error != nil {
 		t0.Fail(error)
 	}

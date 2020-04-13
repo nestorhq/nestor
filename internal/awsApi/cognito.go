@@ -71,7 +71,7 @@ func (api *CognitoAPI) findUserPoolByName(userPoolName string) (string, error) {
 
 // doc at:
 // https://docs.aws.amazon.com/sdk-for-go/api/service/cognitoidentityprovider/#CreateUserPoolInput
-func (api *CognitoAPI) doCreateUserPool(userPoolName string, id string, task *reporter.Task) (*UserPoolInformation, error) {
+func (api *CognitoAPI) doCreateUserPool(userPoolName string, nestorID string, task *reporter.Task) (*UserPoolInformation, error) {
 	t0 := task.SubM(reporter.NewMessage("cognitoidentityprovider.CreateUserPoolInput").WithArg("userPoolName", userPoolName))
 	input := &cognitoidentityprovider.CreateUserPoolInput{
 		PoolName: &userPoolName,
@@ -151,7 +151,7 @@ func (api *CognitoAPI) doCreateUserPool(userPoolName string, id string, task *re
 		UserPoolAddOns: &cognitoidentityprovider.UserPoolAddOnsType{
 			AdvancedSecurityMode: aws.String("AUDIT"),
 		},
-		UserPoolTags: aws.StringMap(api.resourceTags.getTagsAsMapWithID(id)),
+		UserPoolTags: aws.StringMap(api.resourceTags.getTagsAsMapWithID(nestorID)),
 		UsernameAttributes: []*string{
 			aws.String("email"),
 		},

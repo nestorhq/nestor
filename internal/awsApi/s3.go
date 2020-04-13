@@ -62,7 +62,7 @@ func (api *S3API) doTagBucket(bucketName string, nestorID string, t *reporter.Ta
 	return err
 }
 
-func (api *S3API) doCreateBucket(bucketName string, id string, t *reporter.Task) (*S3Information, error) {
+func (api *S3API) doCreateBucket(bucketName string, nestorID string, t *reporter.Task) (*S3Information, error) {
 	t0 := t.SubM(reporter.NewMessage("api.client.CreateBucket").WithArg("bucketName", bucketName))
 	input := &s3.CreateBucketInput{
 		Bucket: aws.String(bucketName),

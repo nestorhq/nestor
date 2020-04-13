@@ -80,7 +80,7 @@ func (api *EventBridgeAPI) checkEventBusExistence(eventBusName string, task *rep
 	}, nil
 }
 
-func (api *EventBridgeAPI) checkEventBusTags(eventBusArn string, id string, task *reporter.Task) error {
+func (api *EventBridgeAPI) checkEventBusTags(eventBusArn string, nestorID string, task *reporter.Task) error {
 	t0 := task.SubM(reporter.NewMessage("api.client.ListTagsOfResource").WithArg("eventBusArn", eventBusArn))
 	input := &eventbridge.ListTagsForResourceInput{
 		ResourceARN: aws.String(eventBusArn),
@@ -98,7 +98,7 @@ func (api *EventBridgeAPI) checkEventBusTags(eventBusArn string, id string, task
 	}
 	// check tags
 	t1 := task.SubM(reporter.NewMessage("checkTags").WithArgs(tagsToCheck))
-	err2 := api.resourceTags.checkTags(tagsToCheck, id)
+	err2 := api.resourceTags.checkTags(tagsToCheck, nestorID)
 	if err2 != nil {
 		t1.Fail(err2)
 		return err2
@@ -107,7 +107,7 @@ func (api *EventBridgeAPI) checkEventBusTags(eventBusArn string, id string, task
 	return nil
 }
 
-func (api *EventBridgeAPI) checkEventBusExistenceAndTags(eventBusName string, id string, task *reporter.Task) (*EventBusInformation, error) {
+func (api *EventBridgeAPI) checkEventBusExistenceAndTags(eventBusName string, nestorID string, task *reporter.Task) (*EventBusInformation, error) {
 	t0 := task.SubM(reporter.NewMessage("checkEventBusExistenceAndTags").WithArg("eventBusName", eventBusName))
 	eventBusInformation, err := api.checkEventBusExistence(eventBusName, t0)
 	if err != nil {
@@ -120,7 +120,7 @@ func (api *EventBridgeAPI) checkEventBusExistenceAndTags(eventBusName string, id
 	}
 
 	t1 := task.SubM(reporter.NewMessage("checkEventBusTags").WithArg("eventBusName", eventBusName))
-	err2 := api.checkEventBusTags(eventBusInformation.arn, id, t1)
+	err2 := api.checkEventBusTags(eventBusInformation.arn, nestorID, t1)
 	if err2 != nil {
 		t1.Fail(err2)
 		return nil, err2
@@ -128,11 +128,11 @@ func (api *EventBridgeAPI) checkEventBusExistenceAndTags(eventBusName string, id
 	return eventBusInformation, nil
 }
 
-func (api *EventBridgeAPI) createEventBus(eventBusName string, id string, task *reporter.Task) (*EventBusInformation, error) {
+func (api *EventBridgeAPI) createEventBus(eventBusName string, nestorID string, task *reporter.Task) (*EventBusInformation, error) {
 	t0 := task.SubM(reporter.NewMessage("createEventBus").WithArg("eventBusName", eventBusName))
 
 	t1 := t0.Sub("check if event bus exists")
-	eventBusInformation, err := api.checkEventBusExistenceAndTags(eventBusName, id, t1)
+	eventBusInformation, err := api.checkEventBusExistenceAndTags(eventBusName, nestorID, t1)
 	if err != nil {
 		t1.Fail(err)
 		return nil, err
@@ -149,7 +149,7 @@ func (api *EventBridgeAPI) createEventBus(eventBusName string, id string, task *
 	}
 
 	t2 := t0.Sub("event bus does not exist - creating it")
-	result, err := api.doCreateEventBus(eventBusName, id, t2)
+	result, err := api.doCreateEventBus(eventBusName, nestorID, t2)
 	if err != nil {
 		t2.Fail(err)
 	}
