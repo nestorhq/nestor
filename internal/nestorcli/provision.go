@@ -79,5 +79,15 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	}
 	t5.Ok()
 
+	//6: CreateRestAPI
+	var restAPIName = appName + "-" + environment + "-main"
+	t6 := t.SubM(reporter.NewMessage("create Rest API").WithArg("restAPIName", restAPIName))
+	_, err6 := api.CreateRestAPI(restAPIName, "nestor.res.httpApi.main", t6)
+	if err6 != nil {
+		t6.Fail(err6)
+		panic(err6)
+	}
+	t6.Ok()
+
 	t.Ok()
 }

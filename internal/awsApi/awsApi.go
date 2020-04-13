@@ -9,14 +9,15 @@ import (
 
 // AwsAPI api to work on AWS
 type AwsAPI struct {
-	profileName    string
-	session        *session.Session
-	resourceTags   *ResourceTags
-	dynamoDbAPI    *DynamoDbAPI
-	cognitoAPI     *CognitoAPI
-	lambdaAPI      *LambdaAPI
-	eventBridgeAPI *EventBridgeAPI
-	s3API          *S3API
+	profileName     string
+	session         *session.Session
+	resourceTags    *ResourceTags
+	dynamoDbAPI     *DynamoDbAPI
+	cognitoAPI      *CognitoAPI
+	lambdaAPI       *LambdaAPI
+	eventBridgeAPI  *EventBridgeAPI
+	s3API           *S3API
+	APIGatewayV2API *APIGatewayV2API
 }
 
 // NewAwsAPI constructor
@@ -100,6 +101,13 @@ func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, co
 		return nil, err
 	}
 
+	t8 := t0.Sub("create ApiGatewayV2 API")
+	awsAPI.APIGatewayV2API, err = NewAPIGatewayV2API(sess, resourceTags)
+	if err != nil {
+		t8.Fail(err)
+		return nil, err
+	}
+
 	t0.Ok()
 	return &awsAPI, nil
 }
@@ -156,6 +164,19 @@ func (api *AwsAPI) CreateBucket(bucketName string, nestorID string, t *reporter.
 			WithArg("bucketName", bucketName))
 
 	res, error := api.s3API.createBucket(bucketName, nestorID, t0)
+	if error != nil {
+		t0.Fail(error)
+	}
+	return res, error
+}
+
+// CreateRestAPI create bucket
+func (api *AwsAPI) CreateRestAPI(apiName string, nestorID string, t *reporter.Task) (*APIGatewayV2Information, error) {
+	t0 := t.SubM(
+		reporter.NewMessage("Aws API: CreateRestAPI").
+			WithArg("apiName", apiName))
+
+	res, error := api.APIGatewayV2API.createRestAPI(apiName, nestorID, t0)
 	if error != nil {
 		t0.Fail(error)
 	}
