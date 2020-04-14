@@ -32,7 +32,7 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	// 1: user pool
 	var userPoolName = appName + "-" + environment
 	t1 := t.SubM(reporter.NewMessage("create user pool").WithArg("userPoolName", userPoolName))
-	_, err1 := api.CreateUserPool(userPoolName, "nestor.res.cognito.main", t1)
+	_, err1 := api.CreateUserPool(userPoolName, config.ResCognitoMain, t1)
 	if err1 != nil {
 		t1.Fail(err1)
 		panic(err1)
