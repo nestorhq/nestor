@@ -9,15 +9,16 @@ import (
 
 // AwsAPI api to work on AWS
 type AwsAPI struct {
-	profileName     string
-	session         *session.Session
-	resourceTags    *ResourceTags
-	dynamoDbAPI     *DynamoDbAPI
-	cognitoAPI      *CognitoAPI
-	lambdaAPI       *LambdaAPI
-	eventBridgeAPI  *EventBridgeAPI
-	s3API           *S3API
-	APIGatewayV2API *APIGatewayV2API
+	profileName       string
+	session           *session.Session
+	resourceTags      *ResourceTags
+	dynamoDbAPI       *DynamoDbAPI
+	cognitoAPI        *CognitoAPI
+	lambdaAPI         *LambdaAPI
+	eventBridgeAPI    *EventBridgeAPI
+	s3API             *S3API
+	APIGatewayV2API   *APIGatewayV2API
+	CloudWatchLogsAPI *CloudWatchLogsAPI
 }
 
 // NewAwsAPI constructor
@@ -108,6 +109,13 @@ func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, co
 		return nil, err
 	}
 
+	t9 := t0.Sub("create CloudWatchLogs API")
+	awsAPI.CloudWatchLogsAPI, err = NewCloudWatchLogsAPI(sess, resourceTags)
+	if err != nil {
+		t9.Fail(err)
+		return nil, err
+	}
+
 	t0.Ok()
 	return &awsAPI, nil
 }
@@ -177,6 +185,19 @@ func (api *AwsAPI) CreateRestAPI(apiName string, nestorID string, t *reporter.Ta
 			WithArg("apiName", apiName))
 
 	res, error := api.APIGatewayV2API.createRestAPI(apiName, nestorID, t0)
+	if error != nil {
+		t0.Fail(error)
+	}
+	return res, error
+}
+
+// CreateCloudWatchGroup create cloudwatch group
+func (api *AwsAPI) CreateCloudWatchGroup(groupName string, nestorID string, t *reporter.Task) (*CloudWatchLogGroupInformation, error) {
+	t0 := t.SubM(
+		reporter.NewMessage("Aws API: CreateCloudWatchGroup").
+			WithArg("groupName", groupName))
+
+	res, error := api.CloudWatchLogsAPI.createLogGroup(groupName, nestorID, t0)
 	if error != nil {
 		t0.Fail(error)
 	}

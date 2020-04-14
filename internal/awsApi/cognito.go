@@ -106,7 +106,7 @@ func (api *CognitoAPI) doCreateUserPool(userPoolName string, nestorID string, ta
 			},
 		},
 		Schema: []*cognitoidentityprovider.SchemaAttributeType{
-			&cognitoidentityprovider.SchemaAttributeType{
+			{
 				Name: aws.String("sub"),
 				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 					MinLength: aws.String("1"),
@@ -117,7 +117,7 @@ func (api *CognitoAPI) doCreateUserPool(userPoolName string, nestorID string, ta
 				AttributeDataType:      aws.String("String"),
 				Mutable:                aws.Bool(false),
 			},
-			&cognitoidentityprovider.SchemaAttributeType{
+			{
 				Name: aws.String("email"),
 				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 					MinLength: aws.String("0"),
@@ -128,14 +128,14 @@ func (api *CognitoAPI) doCreateUserPool(userPoolName string, nestorID string, ta
 				AttributeDataType:      aws.String("String"),
 				Mutable:                aws.Bool(true),
 			},
-			&cognitoidentityprovider.SchemaAttributeType{
+			{
 				AttributeDataType:      aws.String("Boolean"),
 				DeveloperOnlyAttribute: aws.Bool(false),
 				Required:               aws.Bool(false),
 				Name:                   aws.String("email_verified"),
 				Mutable:                aws.Bool(true),
 			},
-			&cognitoidentityprovider.SchemaAttributeType{
+			{
 				Name: aws.String("updated_at"),
 				NumberAttributeConstraints: &cognitoidentityprovider.NumberAttributeConstraintsType{
 					MinValue: aws.String("0"),
