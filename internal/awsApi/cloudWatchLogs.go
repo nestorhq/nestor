@@ -26,7 +26,7 @@ func NewCloudWatchLogsAPI(session *session.Session, resourceTags *ResourceTags) 
 	return &api, nil
 }
 
-func (api *CloudWatchLogsAPI) checkLogGroupTags(groupName string, nestorID string, task *reporter.Task) error {
+func (api *CloudWatchLogsAPI) checkLogGroupTags(groupName string, nestorID string, task *reporter.Task) (bool, error) {
 	t0 := task.SubM(reporter.NewMessage("api.client.ListTagsLogGroup").WithArg("groupName", groupName))
 	input := &cloudwatchlogs.ListTagsLogGroupInput{
 		LogGroupName: aws.String(groupName),
@@ -34,10 +34,10 @@ func (api *CloudWatchLogsAPI) checkLogGroupTags(groupName string, nestorID strin
 	result, err := api.client.ListTagsLogGroup(input)
 	if err != nil {
 		if getAwsErrorCode(err) == "ResourceNotFoundException" {
-			return nil
+			return false, nil
 		}
 		t0.Fail(err)
-		return err
+		return false, err
 	}
 	t0.LogM(reporter.NewMessage("tags for resource").
 		WithArg("input", input.GoString()).
@@ -48,9 +48,28 @@ func (api *CloudWatchLogsAPI) checkLogGroupTags(groupName string, nestorID strin
 	err2 := api.resourceTags.checkTags(result.Tags, nestorID)
 	if err2 != nil {
 		t1.Fail(err2)
-		return err2
+		return false, err2
 	}
 	t1.Ok()
+	return true, nil
+}
+
+func (api *CloudWatchLogsAPI) tagLogGroup(groupName string, nestorID string, task *reporter.Task) error {
+	t0 := task.SubM(reporter.NewMessage("api.client.TagLogGroup").WithArg("groupName", groupName))
+	input := &cloudwatchlogs.TagLogGroupInput{
+		LogGroupName: aws.String(groupName),
+		Tags:         aws.StringMap(api.resourceTags.getTagsAsMapWithID(nestorID)),
+	}
+	result, err := api.client.TagLogGroup(input)
+	if err != nil {
+		t0.Fail(err)
+		return err
+	}
+	t0.LogM(reporter.NewMessage("TagLogGroup operation").
+		WithArg("input", input.GoString()).
+		WithArg("result", result.GoString()))
+
+	t0.Ok()
 	return nil
 }
 
@@ -73,17 +92,32 @@ func (api *CloudWatchLogsAPI) doCreateLogGroup(groupName string, nestorID string
 func (api *CloudWatchLogsAPI) createLogGroup(groupName string, nestorID string, t *reporter.Task) (*CloudWatchLogGroupInformation, error) {
 	t0 := t.SubM(reporter.NewMessage("createLogGroup").WithArg("groupName", groupName))
 
-	err := api.checkLogGroupTags(groupName, nestorID, t0)
+	isPresent, err := api.checkLogGroupTags(groupName, nestorID, t0)
 	if err != nil {
 		t0.Fail(err)
 		return nil, err
 	}
+	if isPresent {
+		t0.Log("log group exists")
+		t0.Ok()
+		return &CloudWatchLogGroupInformation{
+			groupName: groupName,
+		}, nil
+	}
+	t0.Log("log group does not exist")
 	err = api.doCreateLogGroup(groupName, nestorID, t0)
 	if err != nil {
 		t0.Fail(err)
 		return nil, err
 	}
 
+	err = api.tagLogGroup(groupName, nestorID, t0)
+	if err != nil {
+		t0.Fail(err)
+		return nil, err
+	}
+
+	t0.Ok()
 	return &CloudWatchLogGroupInformation{
 		groupName: groupName,
 	}, nil

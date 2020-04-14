@@ -90,9 +90,9 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	t6.Ok()
 
 	//7: CreateLogGroup
-	var groupName = appName + "-" + environment + "-main"
+	var groupName = appName + "-" + environment + "-mainEventBridgeTarget"
 	t7 := t.SubM(reporter.NewMessage("create CloudWatchGroup ").WithArg("groupName", groupName))
-	_, err7 := api.CreateCloudWatchGroup(groupName, "nestor.res.httpApi.main", t7)
+	_, err7 := api.CreateCloudWatchGroup(groupName, "nestor.res.logGroup.mainEventBridgeTarget", t7)
 	if err7 != nil {
 		t7.Fail(err7)
 		panic(err7)
