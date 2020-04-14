@@ -1,8 +1,6 @@
 nestor: "1.0"
-app:
+application:
   name: myapp
+# list optional resources that we need i the application
 resources:
-  httpApi:
-    - id: myHttpApi
-  s3Bucket:
-    - id: one
+  - id: nestor.res.logGroup.mainEventBridgeTarget

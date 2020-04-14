@@ -10,7 +10,7 @@ import (
 
 // CliProvision processing for provision CLI command
 func CliProvision(environment string, nestorConfig *config.Config) {
-	var appName = nestorConfig.App.Name
+	var appName = nestorConfig.Application.Name
 
 	var t = reporter.NewReporterM(reporter.NewMessage("command: provision").
 		WithArg("environment", environment).

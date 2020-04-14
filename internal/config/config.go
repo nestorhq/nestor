@@ -8,38 +8,21 @@ import (
 	"github.com/ghodss/yaml"
 )
 
-// ResourceS3Bucket s3 bucket description
-type ResourceS3Bucket struct {
-	ID string
-}
-
-// ResourceDynamoDbTable dynamodb table description
-type ResourceDynamoDbTable struct {
-	ID string
-}
-
-// ResourceHTTPAPI http api description
-type ResourceHTTPAPI struct {
-	ID string
-}
-
-// ResourcesDefinition resource definition description
+// ResourcesDefinition list the optional resources that we want in the application
 type ResourcesDefinition struct {
-	S3Bucket      []ResourceS3Bucket      `json:"s3Bucket"`
-	DynamoDbTable []ResourceDynamoDbTable `json:"dynamoDbTable"`
-	HTTPAPI       []ResourceHTTPAPI       `json:"httpApi"`
+	ID string
 }
 
-// AppDefinition application definition
-type AppDefinition struct {
+// ApplicationDefinition application definition
+type ApplicationDefinition struct {
 	Name string
 }
 
 // Config nestor configuration
 type Config struct {
-	Nestor    string
-	App       AppDefinition       `json:"app"`
-	Resources ResourcesDefinition `json:"resources"`
+	Nestor      string
+	Application ApplicationDefinition `json:"application"`
+	Resources   []ResourcesDefinition `json:"resources"`
 }
 
 // ReadConfig read congiration from file
