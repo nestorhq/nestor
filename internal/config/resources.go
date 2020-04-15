@@ -72,7 +72,7 @@ func (config *Config) IsResourceRequired(resourceID string) (bool, string) {
 	for _, availableResource := range availableResources {
 		if availableResource.ID == resourceID {
 			if !availableResource.isOptional {
-				return false, resourceID
+				return true, resourceID
 			}
 		}
 	}

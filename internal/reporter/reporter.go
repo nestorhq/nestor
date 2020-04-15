@@ -27,13 +27,32 @@ type Task struct {
 	lastLog  string
 }
 
-func printMessageAndArgs(indent int, title string, args map[string]string) {
+// colorIx
+// 0: initial message
+// 1: default color
+// 2: section
+// 8: success message
+// 9: error message
+func printMessageAndArgs(indent int, title string, args map[string]string, colorIx int) {
 	var tab = ""
 	for i := 0; i < indent; i++ {
 		tab += "  "
 	}
 	fmt.Print(tab)
-	fmt.Println(term.Yellow(title))
+	switch colorIx {
+	case 0:
+		fmt.Println(term.Yellow(title))
+	case 1:
+		fmt.Println(term.Yellow(title))
+	case 2:
+		fmt.Println(term.Blue(title))
+	case 8:
+		fmt.Println(term.Green(title))
+	case 9:
+		fmt.Println(term.Red(title))
+	default:
+		fmt.Println(term.Yellow(title))
+	}
 	if args != nil {
 		for name, value := range args {
 			fmt.Printf(term.Cyanf("  %s- %s: %s\n", tab, name, value))
@@ -78,12 +97,12 @@ func (message *Message) WithArgs(args map[string]*string) *Message {
 	return message
 }
 
-func (message *Message) print(indent int, withArgs bool, extra string) {
+func (message *Message) print(indent int, withArgs bool, extra string, colorIx int) {
 	var args map[string]string = nil
 	if withArgs {
 		args = message.args
 	}
-	printMessageAndArgs(indent, message.title+extra, args)
+	printMessageAndArgs(indent, message.title+extra, args, colorIx)
 }
 
 // NewReporterM constructor
@@ -107,7 +126,7 @@ func (reporter *Reporter) Start() *Task {
 		fmt.Println("")
 	}
 
-	reporter.message.print(reporter.level, true, "")
+	reporter.message.print(reporter.level, true, "", 0)
 
 	var result = Task{
 		level:    1 + reporter.level,
@@ -119,19 +138,19 @@ func (reporter *Reporter) Start() *Task {
 // Ok display the fact that the reporter ends successfully
 func (reporter *Reporter) Ok() {
 	// we log the reporter title
-	printMessageAndArgs(reporter.level, reporter.message.title+": SUCCESS", nil)
+	printMessageAndArgs(reporter.level, reporter.message.title+": SUCCESS", nil, 8)
 }
 
 // Okr success with result to display
 func (reporter *Reporter) Okr(result map[string]string) {
 	// we log the reporter title
-	printMessageAndArgs(reporter.level, reporter.message.title+": SUCCESS", result)
+	printMessageAndArgs(reporter.level, reporter.message.title+": SUCCESS", result, 8)
 }
 
 // Fail indicates that the reporter failed
 func (reporter *Reporter) Fail(err error) {
 	// we log the reporter title
-	reporter.message.print(reporter.level, false, ": FAILED")
+	reporter.message.print(reporter.level, false, ": FAILED", 9)
 	printError(err)
 }
 
@@ -153,7 +172,15 @@ func (task *Task) Sub(title string) *Task {
 func (task *Task) LogM(message *Message) *Task {
 	// we log the message title
 	task.lastLog = message.title
-	message.print(task.level, true, "")
+	message.print(task.level, true, "", 1)
+	return task
+}
+
+// SectionM log a section title
+func (task *Task) SectionM(message *Message) *Task {
+	// we log the message title
+	task.lastLog = message.title
+	message.print(task.level, true, "", 2)
 	return task
 }
 
@@ -161,6 +188,13 @@ func (task *Task) LogM(message *Message) *Task {
 func (task *Task) Log(title string) *Task {
 	// we log the message title
 	task.LogM(NewMessage(title))
+	return task
+}
+
+// Section create section title
+func (task *Task) Section(title string) *Task {
+	// we log the message title
+	task.SectionM(NewMessage(title))
 	return task
 }
 
