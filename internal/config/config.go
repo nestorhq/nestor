@@ -19,14 +19,14 @@ type LambdaPermission struct {
 	Actions    []LambdaPermissionAction `json:"actions"`
 }
 
-// LambdasDefinition list the optional resources that we want in the application
-type LambdasDefinition struct {
+// LambdaDefinition list the optional resources that we want in the application
+type LambdaDefinition struct {
 	ID          string
 	Permissions []LambdaPermission
 }
 
-// ResourcesDefinition list the optional resources that we want in the application
-type ResourcesDefinition struct {
+// ResourceDefinition list the optional resources that we want in the application
+type ResourceDefinition struct {
 	ID string
 }
 
@@ -39,8 +39,8 @@ type ApplicationDefinition struct {
 type Config struct {
 	Nestor      string
 	Application ApplicationDefinition `json:"application"`
-	Resources   []ResourcesDefinition `json:"resources"`
-	Lambdas     []LambdasDefinition   `json:"lambdas"`
+	Resources   []ResourceDefinition  `json:"resources"`
+	Lambdas     []LambdaDefinition    `json:"lambdas"`
 }
 
 // ReadConfig read congiration from file

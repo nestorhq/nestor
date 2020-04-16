@@ -146,12 +146,11 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 		var lambdaName = appName + "-" + environment + "-" + lambda.ID
 		t.Section("create lambda:" + lambdaName)
 		t1 := t.SubM(reporter.NewMessage("create Lambda role").WithArg("lambdaName", lambdaName))
-		policyStatements, err := nestorResources.GetPolicyStatementsForLambda(lambda.Permissions)
+		_, err := api.CreateAppLambdaRole(lambdaName, lambda, nestorResources, t1)
 		if err != nil {
 			t1.Fail(err)
 			panic(err)
 		}
-		fmt.Printf("@@ policy: %v", policyStatements)
 		t1.Ok()
 
 		t2 := t.SubM(reporter.NewMessage("create Lambda ").WithArg("lambdaName", lambdaName))

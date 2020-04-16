@@ -118,7 +118,7 @@ func NewResources() *Resources {
 }
 
 // IsResourceRequired indicates if a given resource must be provisioned
-func (res *Resources) IsResourceRequired(resourceID string, resDef []config.ResourcesDefinition) (bool, string) {
+func (res *Resources) IsResourceRequired(resourceID string, resDef []config.ResourceDefinition) (bool, string) {
 	// check first if that's a nestor required resource
 	for _, nestorResource := range res.nestorResources {
 		if nestorResource.ID == resourceID {

@@ -1,10 +1,14 @@
 package awsapi
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/nestorhq/nestor/internal/config"
 	"github.com/nestorhq/nestor/internal/reporter"
+	"github.com/nestorhq/nestor/internal/resources"
 )
 
 // AwsAPI api to work on AWS
@@ -202,6 +206,19 @@ func (api *AwsAPI) CreateCloudWatchGroup(lambdaName string, nestorID string, t *
 		t0.Fail(error)
 	}
 	return res, error
+}
+
+// CreateAppLambdaRole create role for lambda
+func (api *AwsAPI) CreateAppLambdaRole(lambdaName string, lambdaDefinition config.LambdaDefinition, nestorResources *resources.Resources, t *reporter.Task) (*RoleInformation, error) {
+	t1 := t.SubM(reporter.NewMessage("create Lambda role").WithArg("lambdaName", lambdaName))
+	policyStatements, err := nestorResources.GetPolicyStatementsForLambda(lambdaDefinition.Permissions)
+	if err != nil {
+		t1.Fail(err)
+		panic(err)
+	}
+	fmt.Printf("@@ policy: %v", policyStatements)
+	t1.Ok()
+	return nil, nil
 }
 
 // CreateLambda create cloudwatch group

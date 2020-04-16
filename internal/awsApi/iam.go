@@ -17,6 +17,11 @@ type IAMInformation struct {
 	arn          string
 }
 
+// RoleInformation  description of an IAM role
+type RoleInformation struct {
+	RoleArn string
+}
+
 // NewIAMAPI constructor
 func NewIAMAPI(session *session.Session, resourceTags *ResourceTags) (*IAMAPI, error) {
 	var api = IAMAPI{resourceTags: resourceTags}
