@@ -120,7 +120,7 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	//7: CreateLogGroup
 	if ok, resID := nestorConfig.IsResourceRequired(config.ResLogGroupMainEventBridge); ok {
 		t0.Section("configure resource:" + resID)
-		var groupName = appName + "-" + environment + "-mainEventBridgeTarget"
+		var groupName = "/aws/events/" + appName + "/" + environment + "/mainEventBridgeTarget"
 		t1 := t.SubM(reporter.NewMessage("create CloudWatchGroup ").WithArg("groupName", groupName))
 		_, err := api.CreateCloudWatchGroup(groupName, resID, t1)
 		if err != nil {
