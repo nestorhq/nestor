@@ -1,8 +1,6 @@
 package awsapi
 
 import (
-	"fmt"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
@@ -219,18 +217,33 @@ func (api *AwsAPI) CreateCloudWatchGroup(lambdaName string, nestorID string, t *
 // CreateAppLambdaRole create role for lambda
 func (api *AwsAPI) CreateAppLambdaRole(roleName string, nestorID string, lambdaName string, lambdaDefinition config.LambdaDefinition, nestorResources *resources.Resources, t *reporter.Task) (*RoleInformation, error) {
 	t1 := t.SubM(reporter.NewMessage("GetPolicyStatementsForLambda").WithArg("lambdaName", lambdaName))
-	policyStatements, err := nestorResources.GetPolicyStatementsForLambda(lambdaDefinition.Permissions)
+	customPolicyStatements, err := nestorResources.GetPolicyStatementsForLambda(lambdaDefinition.Permissions)
 	if err != nil {
 		t1.Fail(err)
 		return nil, err
 	}
-	fmt.Printf("@@ policy: %v", policyStatements)
 	t1.Ok()
 
 	t2 := t.SubM(reporter.NewMessage("create Lambda role").WithArg("lambdaName", lambdaName))
 	result, err := api.IAMAPI.CreateRole(roleName, nestorID, t2)
 	if err != nil {
 		t2.Fail(err)
+		return nil, err
+	}
+
+	const lambdaExecutionRolePolicy = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+
+	t3 := t.SubM(reporter.NewMessage("AttachManagedPolicy").WithArg("roleName", roleName))
+	err = api.IAMAPI.AttachManagedPolicy(result.RoleName, lambdaExecutionRolePolicy, t3)
+	if err != nil {
+		t3.Fail(err)
+		return nil, err
+	}
+
+	t4 := t.SubM(reporter.NewMessage("AttachCustomRolePolicy").WithArg("roleName", roleName))
+	err = api.IAMAPI.AttachCustomRolePolicy(result.RoleName, "nestorCustomPolicy", customPolicyStatements, t4)
+	if err != nil {
+		t3.Fail(err)
 		return nil, err
 	}
 

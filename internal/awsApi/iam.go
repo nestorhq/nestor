@@ -1,10 +1,13 @@
 package awsapi
 
 import (
+	"encoding/json"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/nestorhq/nestor/internal/reporter"
+	"github.com/nestorhq/nestor/internal/resources"
 )
 
 // IAMAPI api
@@ -23,6 +26,11 @@ type IAMInformation struct {
 type RoleInformation struct {
 	RoleArn  string
 	RoleName string
+}
+
+type policyDocument struct {
+	Version   string
+	Statement []resources.PolicyStatement
 }
 
 // NewIAMAPI constructor
@@ -154,4 +162,60 @@ func (api *IAMAPI) CreateRole(roleName string, nestorID string, t *reporter.Task
 		return nil, err
 	}
 	return result, err
+}
+
+// AttachManagedPolicy attach maneged policy to a role
+func (api *IAMAPI) AttachManagedPolicy(roleName string, policyArn string, t *reporter.Task) error {
+	t0 := t.SubM(reporter.NewMessage("attach managed policy").WithArg("roleName", roleName).WithArg("policyArn", policyArn))
+	input := &iam.AttachRolePolicyInput{
+		PolicyArn: aws.String(policyArn),
+		RoleName:  aws.String(roleName),
+	}
+
+	result, err := api.client.AttachRolePolicy(input)
+	if err != nil {
+		t0.Fail(err)
+		return err
+	}
+	t0.LogM(reporter.NewMessage("AttachRolePolicy result").
+		WithArg("input", input.GoString()).
+		WithArg("result", result.GoString()))
+	t0.Ok()
+	return nil
+}
+
+// AttachCustomRolePolicy attach a custom policy
+func (api *IAMAPI) AttachCustomRolePolicy(roleName string, policyName string, policyStatements []resources.PolicyStatement, t *reporter.Task) error {
+	t0 := t.SubM(reporter.NewMessage("attach custom policy").WithArg("roleName", roleName).WithArg("policyName", policyName))
+	document := policyDocument{
+		Version:   "2012-10-17",
+		Statement: policyStatements,
+	}
+	marshaled, err := json.Marshal(document)
+	if err != nil {
+		t0.Fail(err)
+		return err
+	}
+	var policyDocument = string(marshaled)
+
+	t0 = t.SubM(reporter.NewMessage("attach managed policy").
+		WithArg("roleName", roleName).
+		WithArg("policyName", policyName).
+		WithArg("policyDocument", policyDocument))
+	input := &iam.PutRolePolicyInput{
+		RoleName:       aws.String(roleName),
+		PolicyName:     aws.String(policyName),
+		PolicyDocument: aws.String(policyDocument),
+	}
+
+	result, err := api.client.PutRolePolicy(input)
+	if err != nil {
+		t0.Fail(err)
+		return err
+	}
+	t0.LogM(reporter.NewMessage("PutRolePolicy result").
+		WithArg("input", input.GoString()).
+		WithArg("result", result.GoString()))
+	t0.Ok()
+	return nil
 }
