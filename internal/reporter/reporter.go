@@ -45,7 +45,7 @@ func printMessageAndArgs(indent int, title string, args map[string]string, color
 	case 1:
 		fmt.Println(term.Yellow(title))
 	case 2:
-		fmt.Println(term.Blue(title))
+		fmt.Println(term.BBlue(title))
 	case 8:
 		fmt.Println(term.Green(title))
 	case 9:

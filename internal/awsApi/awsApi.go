@@ -192,12 +192,25 @@ func (api *AwsAPI) CreateRestAPI(apiName string, nestorID string, t *reporter.Ta
 }
 
 // CreateCloudWatchGroup create cloudwatch group
-func (api *AwsAPI) CreateCloudWatchGroup(groupName string, nestorID string, t *reporter.Task) (*CloudWatchLogGroupInformation, error) {
+func (api *AwsAPI) CreateCloudWatchGroup(lambdaName string, nestorID string, t *reporter.Task) (*CloudWatchLogGroupInformation, error) {
 	t0 := t.SubM(
 		reporter.NewMessage("Aws API: CreateCloudWatchGroup").
-			WithArg("groupName", groupName))
+			WithArg("lambdaName", lambdaName))
 
-	res, error := api.CloudWatchLogsAPI.createLogGroup(groupName, nestorID, t0)
+	res, error := api.CloudWatchLogsAPI.createLogGroup(lambdaName, nestorID, t0)
+	if error != nil {
+		t0.Fail(error)
+	}
+	return res, error
+}
+
+// CreateLambda create cloudwatch group
+func (api *AwsAPI) CreateLambda(lambdaName string, nestorID string, t *reporter.Task) (*LambdaInformation, error) {
+	t0 := t.SubM(
+		reporter.NewMessage("Aws API: CreateCloudWatchGroup").
+			WithArg("lambdaName", lambdaName))
+
+	res, error := api.lambdaAPI.createLambda(lambdaName, nestorID, t0)
 	if error != nil {
 		t0.Fail(error)
 	}

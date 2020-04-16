@@ -8,6 +8,11 @@ import (
 	"github.com/ghodss/yaml"
 )
 
+// LambdasDefinition list the optional resources that we want in the application
+type LambdasDefinition struct {
+	ID string
+}
+
 // ResourcesDefinition list the optional resources that we want in the application
 type ResourcesDefinition struct {
 	ID string
@@ -23,6 +28,7 @@ type Config struct {
 	Nestor      string
 	Application ApplicationDefinition `json:"application"`
 	Resources   []ResourcesDefinition `json:"resources"`
+	Lambdas     []LambdasDefinition   `json:"lambdas"`
 }
 
 // ReadConfig read congiration from file

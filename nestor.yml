@@ -4,3 +4,6 @@ application:
 # list optional resources that we need i the application
 resources:
   - id: nestor.res.logGroup.mainEventBridgeTarget
+
+lambdas:
+  - id: 100-snoop
