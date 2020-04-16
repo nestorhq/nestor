@@ -180,6 +180,7 @@ func (api *LambdaAPI) createLambda(lambdaName string, nestorID string, roleArn s
 	result, err := api.doCreateLambda(lambdaName, nestorID, roleArn, t2)
 	if err != nil {
 		t2.Fail(err)
+		return nil, err
 	}
 	t2.Ok()
 	t0.Okr(map[string]string{

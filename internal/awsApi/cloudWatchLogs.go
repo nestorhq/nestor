@@ -78,14 +78,14 @@ func (api *CloudWatchLogsAPI) doCreateLogGroup(groupName string, nestorID string
 	input := &cloudwatchlogs.CreateLogGroupInput{
 		LogGroupName: aws.String(groupName),
 	}
-	result, err := api.client.CreateLogGroup(input)
+	_, err := api.client.CreateLogGroup(input)
 	if err != nil {
 		t0.Fail(err)
 		return err
 	}
-	t0.LogM(reporter.NewMessage("CreateLogGroup result").
-		WithArg("input", input.GoString()).
-		WithArg("result", result.GoString()))
+	// t0.LogM(reporter.NewMessage("CreateLogGroup result").
+	// 	WithArg("input", input.GoString()).
+	// 	WithArg("result", result.GoString()))
 	return nil
 }
 

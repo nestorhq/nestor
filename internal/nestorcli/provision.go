@@ -144,23 +144,26 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	// Create lambdas
 	for _, lambda := range nestorConfig.Lambdas {
 		var lambdaName = appName + "-" + environment + "-" + lambda.ID
+		var roleName = appName + "-" + environment + "-" + lambda.ID
+		var nestorID = "nestor.app.lambda" + lambda.ID
 		t.Section("create lambda:" + lambdaName)
 		t1 := t.SubM(reporter.NewMessage("create Lambda role").WithArg("lambdaName", lambdaName))
-		_, err := api.CreateAppLambdaRole(lambdaName, lambda, nestorResources, t1)
+		role, err := api.CreateAppLambdaRole(roleName, lambdaName, lambda, nestorResources, t1)
 		if err != nil {
 			t1.Fail(err)
 			panic(err)
 		}
+		t1.LogM(reporter.NewMessage("role created").
+			WithArg("RoleArn", role.RoleArn).WithArg("RoleName", role.RoleName))
 		t1.Ok()
 
 		t2 := t.SubM(reporter.NewMessage("create Lambda ").WithArg("lambdaName", lambdaName))
-		_, err2 := api.CreateLambda(lambdaName, lambda.ID, "arn:aws:iam::464972470401:role/iam_for_events_lambda_prod", t1)
+		_, err2 := api.CreateLambda(lambdaName, nestorID, role.RoleArn, t1)
 		if err2 != nil {
 			t2.Fail(err2)
 			panic(err2)
 		}
 		t2.Ok()
 	}
-
 	t.Ok()
 }

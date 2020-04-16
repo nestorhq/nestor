@@ -23,6 +23,7 @@ type AwsAPI struct {
 	s3API             *S3API
 	APIGatewayV2API   *APIGatewayV2API
 	CloudWatchLogsAPI *CloudWatchLogsAPI
+	IAMAPI            *IAMAPI
 }
 
 // NewAwsAPI constructor
@@ -120,6 +121,13 @@ func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, co
 		return nil, err
 	}
 
+	t10 := t0.Sub("create CloudWatchLogs API")
+	awsAPI.IAMAPI, err = NewIAMAPI(sess, resourceTags)
+	if err != nil {
+		t10.Fail(err)
+		return nil, err
+	}
+
 	t0.Ok()
 	return &awsAPI, nil
 }
@@ -209,16 +217,24 @@ func (api *AwsAPI) CreateCloudWatchGroup(lambdaName string, nestorID string, t *
 }
 
 // CreateAppLambdaRole create role for lambda
-func (api *AwsAPI) CreateAppLambdaRole(lambdaName string, lambdaDefinition config.LambdaDefinition, nestorResources *resources.Resources, t *reporter.Task) (*RoleInformation, error) {
-	t1 := t.SubM(reporter.NewMessage("create Lambda role").WithArg("lambdaName", lambdaName))
+func (api *AwsAPI) CreateAppLambdaRole(roleName string, lambdaName string, lambdaDefinition config.LambdaDefinition, nestorResources *resources.Resources, t *reporter.Task) (*RoleInformation, error) {
+	t1 := t.SubM(reporter.NewMessage("GetPolicyStatementsForLambda").WithArg("lambdaName", lambdaName))
 	policyStatements, err := nestorResources.GetPolicyStatementsForLambda(lambdaDefinition.Permissions)
 	if err != nil {
 		t1.Fail(err)
-		panic(err)
+		return nil, err
 	}
 	fmt.Printf("@@ policy: %v", policyStatements)
 	t1.Ok()
-	return nil, nil
+
+	t2 := t.SubM(reporter.NewMessage("create Lambda role").WithArg("lambdaName", lambdaName))
+	result, err := api.IAMAPI.CreateRole(roleName, lambdaDefinition.ID, t2)
+	if err != nil {
+		t2.Fail(err)
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // CreateLambda create cloudwatch group
@@ -227,9 +243,10 @@ func (api *AwsAPI) CreateLambda(lambdaName string, nestorID string, roleArn stri
 		reporter.NewMessage("Aws API: CreateCloudWatchGroup").
 			WithArg("lambdaName", lambdaName))
 
-	res, error := api.lambdaAPI.createLambda(lambdaName, nestorID, roleArn, t0)
-	if error != nil {
-		t0.Fail(error)
+	res, err := api.lambdaAPI.createLambda(lambdaName, nestorID, roleArn, t0)
+	if err != nil {
+		t0.Fail(err)
+		return nil, err
 	}
-	return res, error
+	return res, nil
 }
