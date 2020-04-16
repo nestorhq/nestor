@@ -8,6 +8,12 @@ import (
 	"github.com/ghodss/yaml"
 )
 
+// TriggersDefinition triggers description
+type TriggersDefinition struct {
+	Type   string
+	Lambda string
+}
+
 // LambdaPermissionAction describe an action allowed
 type LambdaPermissionAction struct {
 	Operation string
@@ -41,6 +47,7 @@ type Config struct {
 	Application ApplicationDefinition `json:"application"`
 	Resources   []ResourceDefinition  `json:"resources"`
 	Lambdas     []LambdaDefinition    `json:"lambdas"`
+	Triggers    []TriggersDefinition  `json:"triggers"`
 }
 
 // ReadConfig read congiration from file

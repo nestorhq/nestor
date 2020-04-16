@@ -1,6 +1,8 @@
 package awsapi
 
 import (
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
@@ -22,6 +24,26 @@ type AwsAPI struct {
 	APIGatewayV2API   *APIGatewayV2API
 	CloudWatchLogsAPI *CloudWatchLogsAPI
 	IAMAPI            *IAMAPI
+}
+
+func retry(attempts int, sleep time.Duration, fn func() error) error {
+	if err := fn(); err != nil {
+		if s, ok := err.(stop); ok {
+			// Return the original error for later checking
+			return s.error
+		}
+
+		if attempts--; attempts > 0 {
+			time.Sleep(sleep)
+			return retry(attempts, 2*sleep, fn)
+		}
+		return err
+	}
+	return nil
+}
+
+type stop struct {
+	error
 }
 
 // NewAwsAPI constructor
@@ -256,10 +278,25 @@ func (api *AwsAPI) CreateLambda(lambdaName string, nestorID string, roleArn stri
 		reporter.NewMessage("Aws API: CreateCloudWatchGroup").
 			WithArg("lambdaName", lambdaName))
 
-	res, err := api.lambdaAPI.createLambda(lambdaName, nestorID, roleArn, t0)
-	if err != nil {
-		t0.Fail(err)
+	var result *LambdaInformation
+	var errTop, err error
+
+	errTop = retry(5, time.Second, func() error {
+		t1 := t0.Sub("Attempt create lambda...")
+		result, err = api.lambdaAPI.createLambda(lambdaName, nestorID, roleArn, t1)
+		if err != nil {
+			if getAwsErrorCode(err) == "InvalidParameterValueException" {
+				return err
+			}
+			t1.Fail(err)
+			return stop{err}
+		}
+		t1.Ok()
+		return nil
+	})
+	if errTop != nil {
+		t0.Fail(errTop)
 		return nil, err
 	}
-	return res, nil
+	return result, nil
 }

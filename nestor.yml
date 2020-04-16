@@ -12,3 +12,16 @@ lambdas:
         actions:
           - operation: read
           - operation: write
+  - id: 200-s3-uploads
+    permissions:
+      - resourceId: nestor.res.s3.upload
+        actions:
+          - operation: read
+          - operation: delete
+
+triggers:
+  - type: s3
+    lambda: s3-uploads
+    # s3:
+    #   prefix: /upload
+    #   suffix: *.png
