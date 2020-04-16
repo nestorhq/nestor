@@ -219,3 +219,19 @@ func (api *IAMAPI) AttachCustomRolePolicy(roleName string, policyName string, po
 	t0.Ok()
 	return nil
 }
+
+// CheckRole check that role exists
+func (api *IAMAPI) CheckRole(roleName string, t *reporter.Task) error {
+	t0 := t.SubM(reporter.NewMessage("check role existence").WithArg("roleName", roleName))
+
+	input := &iam.GetRoleInput{
+		RoleName: aws.String(roleName),
+	}
+	_, err := api.client.GetRole(input)
+	if err != nil {
+		t0.Fail(err)
+		return err
+	}
+	return nil
+
+}
