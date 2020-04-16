@@ -6,10 +6,12 @@ import (
 	"github.com/nestorhq/nestor/internal/awsapi"
 	"github.com/nestorhq/nestor/internal/config"
 	"github.com/nestorhq/nestor/internal/reporter"
+	"github.com/nestorhq/nestor/internal/resources"
 )
 
 // CliProvision processing for provision CLI command
 func CliProvision(environment string, nestorConfig *config.Config) {
+	var nestorResources = resources.NewResources()
 	var appName = nestorConfig.Application.Name
 
 	var t = reporter.NewReporterM(reporter.NewMessage("command: provision").
@@ -30,7 +32,7 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	}
 
 	// user pool
-	if ok, resID := nestorConfig.IsResourceRequired(config.ResCognitoMain); ok {
+	if ok, resID := nestorResources.IsResourceRequired(resources.ResCognitoMain, nestorConfig); ok {
 		t.Section("configure resource:" + resID)
 		var userPoolName = appName + "-" + environment
 		t1 := t.SubM(reporter.NewMessage("create user pool").WithArg("userPoolName", userPoolName))
@@ -39,14 +41,14 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 			t1.Fail(err)
 			panic(err)
 		}
-		nestorConfig.RegisterNestorResource(resID, res.UserPoolArn)
+		nestorResources.RegisterNestorResource(resID, res.UserPoolArn)
 		t1.Ok()
 	} else {
 		t0.Log("non required resource:" + resID)
 	}
 
 	// dynamodb table
-	if ok, resID := nestorConfig.IsResourceRequired(config.ResDynamoDbTableMain); ok {
+	if ok, resID := nestorResources.IsResourceRequired(resources.ResDynamoDbTableMain, nestorConfig); ok {
 		t.Section("configure resource:" + resID)
 		var tableName = appName + "-" + environment + "-main"
 		t1 := t.SubM(reporter.NewMessage("create dynamodb table").WithArg("tableName", tableName))
@@ -55,14 +57,14 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 			t1.Fail(err)
 			panic(err)
 		}
-		nestorConfig.RegisterNestorResource(resID, res.TableArn)
+		nestorResources.RegisterNestorResource(resID, res.TableArn)
 		t1.Ok()
 	} else {
 		t0.Log("non required resource:" + resID)
 	}
 
 	// event bus
-	if ok, resID := nestorConfig.IsResourceRequired(config.ResEventBridgeMain); ok {
+	if ok, resID := nestorResources.IsResourceRequired(resources.ResEventBridgeMain, nestorConfig); ok {
 		t.Section("configure resource:" + resID)
 		var eventBusName = appName + "-" + environment + "-main"
 		t1 := t.SubM(reporter.NewMessage("create event bus").WithArg("eventBusName", eventBusName))
@@ -71,14 +73,14 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 			t1.Fail(err)
 			panic(err)
 		}
-		nestorConfig.RegisterNestorResource(resID, res.EventBusArn)
+		nestorResources.RegisterNestorResource(resID, res.EventBusArn)
 		t1.Ok()
 	} else {
 		t0.Log("non required resource:" + resID)
 	}
 
 	// s3 bucket - storage
-	if ok, resID := nestorConfig.IsResourceRequired(config.ResS3BucketForStorage); ok {
+	if ok, resID := nestorResources.IsResourceRequired(resources.ResS3BucketForStorage, nestorConfig); ok {
 		t.Section("configure resource:" + resID)
 		var bucketNameStorage = appName + "-" + environment + "-store"
 		t1 := t.SubM(reporter.NewMessage("create s3 bucket for storage").WithArg("bucketNameStorage", bucketNameStorage))
@@ -87,14 +89,14 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 			t1.Fail(err)
 			panic(err)
 		}
-		nestorConfig.RegisterNestorResource(resID, res.BucketArn)
+		nestorResources.RegisterNestorResource(resID, res.BucketArn)
 		t1.Ok()
 	} else {
 		t0.Log("non required resource:" + resID)
 	}
 
 	// s3 bucket - upload
-	if ok, resID := nestorConfig.IsResourceRequired(config.ResS3BucketForUpload); ok {
+	if ok, resID := nestorResources.IsResourceRequired(resources.ResS3BucketForUpload, nestorConfig); ok {
 		t.Section("configure resource:" + resID)
 		var bucketNameUpload = appName + "-" + environment + "-upload"
 		t1 := t.SubM(reporter.NewMessage("create s3 bucket for upload").WithArg("bucketNameUpload", bucketNameUpload))
@@ -103,13 +105,13 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 			t1.Fail(err)
 			panic(err)
 		}
-		nestorConfig.RegisterNestorResource(resID, res.BucketArn)
+		nestorResources.RegisterNestorResource(resID, res.BucketArn)
 		t1.Ok()
 	} else {
 		t0.Log("non required resource:" + resID)
 	}
 	// CreateRestAPI
-	if ok, resID := nestorConfig.IsResourceRequired(config.ResHTTPAPIMain); ok {
+	if ok, resID := nestorResources.IsResourceRequired(resources.ResHTTPAPIMain, nestorConfig); ok {
 		t.Section("configure resource:" + resID)
 		var restAPIName = appName + "-" + environment + "-main"
 		t1 := t.SubM(reporter.NewMessage("create Rest API").WithArg("restAPIName", restAPIName))
@@ -118,13 +120,13 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 			t1.Fail(err)
 			panic(err)
 		}
-		nestorConfig.RegisterNestorResource(resID, res.HTTPApiID)
+		nestorResources.RegisterNestorResource(resID, res.HTTPApiID)
 		t1.Ok()
 	} else {
 		t0.Log("non required resource:" + resID)
 	}
 	// CreateLogGroup
-	if ok, resID := nestorConfig.IsResourceRequired(config.ResLogGroupMainEventBridge); ok {
+	if ok, resID := nestorResources.IsResourceRequired(resources.ResLogGroupMainEventBridge, nestorConfig); ok {
 		t.Section("configure resource:" + resID)
 		var groupName = "/aws/events/" + appName + "/" + environment + "/mainEventBridgeTarget"
 		t1 := t.SubM(reporter.NewMessage("create CloudWatchGroup ").WithArg("groupName", groupName))
@@ -133,7 +135,7 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 			t1.Fail(err)
 			panic(err)
 		}
-		nestorConfig.RegisterNestorResource(resID, res.GroupName)
+		nestorResources.RegisterNestorResource(resID, res.GroupName)
 		t1.Ok()
 	} else {
 		t0.Log("non required resource:" + resID)
