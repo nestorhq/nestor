@@ -66,7 +66,7 @@ func (api *IAMAPI) checkRoleExistenceAndTags(roleName string, nestorID string, t
 	}
 	result, err := api.client.GetRole(input)
 	if err != nil {
-		if getAwsErrorCode(err) == "ResourceNotFoundException" {
+		if getAwsErrorCode(err) == "NoSuchEntity" {
 			return nil, nil
 		}
 		t0.Fail(err)
@@ -75,6 +75,20 @@ func (api *IAMAPI) checkRoleExistenceAndTags(roleName string, nestorID string, t
 	t0.LogM(reporter.NewMessage("GetRole result").
 		WithArg("input", input.GoString()).
 		WithArg("result", result.GoString()))
+
+	// check tags
+	tagsToCheck := map[string]*string{}
+	tagsFromRole := result.Role.Tags
+	for _, tag := range tagsFromRole {
+		tagsToCheck[*tag.Key] = tag.Value
+	}
+
+	t1 := t0.SubM(reporter.NewMessage("checking tags").WithArgs(tagsToCheck))
+	err2 := api.resourceTags.checkTags(tagsToCheck, nestorID)
+	if err2 != nil {
+		t1.Fail(err2)
+		return nil, err2
+	}
 
 	return &RoleInformation{
 		RoleArn:  *result.Role.Arn,
@@ -109,20 +123,6 @@ func (api *IAMAPI) doCreateRole(roleName string, nestorID string, t *reporter.Ta
 	t0.LogM(reporter.NewMessage("CreateRole result").
 		WithArg("input", input.GoString()).
 		WithArg("result", result.GoString()))
-
-	// check tags
-	tagsToCheck := map[string]*string{}
-	tagsFromRole := result.Role.Tags
-	for _, tag := range tagsFromRole {
-		tagsToCheck[*tag.Key] = tag.Value
-	}
-
-	t1 := t0.SubM(reporter.NewMessage("checking tags").WithArgs(tagsToCheck))
-	err2 := api.resourceTags.checkTags(tagsToCheck, nestorID)
-	if err2 != nil {
-		t1.Fail(err2)
-		return nil, err2
-	}
 
 	return &RoleInformation{
 		RoleArn:  *result.Role.Arn,

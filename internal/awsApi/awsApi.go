@@ -217,7 +217,7 @@ func (api *AwsAPI) CreateCloudWatchGroup(lambdaName string, nestorID string, t *
 }
 
 // CreateAppLambdaRole create role for lambda
-func (api *AwsAPI) CreateAppLambdaRole(roleName string, lambdaName string, lambdaDefinition config.LambdaDefinition, nestorResources *resources.Resources, t *reporter.Task) (*RoleInformation, error) {
+func (api *AwsAPI) CreateAppLambdaRole(roleName string, nestorID string, lambdaName string, lambdaDefinition config.LambdaDefinition, nestorResources *resources.Resources, t *reporter.Task) (*RoleInformation, error) {
 	t1 := t.SubM(reporter.NewMessage("GetPolicyStatementsForLambda").WithArg("lambdaName", lambdaName))
 	policyStatements, err := nestorResources.GetPolicyStatementsForLambda(lambdaDefinition.Permissions)
 	if err != nil {
@@ -228,7 +228,7 @@ func (api *AwsAPI) CreateAppLambdaRole(roleName string, lambdaName string, lambd
 	t1.Ok()
 
 	t2 := t.SubM(reporter.NewMessage("create Lambda role").WithArg("lambdaName", lambdaName))
-	result, err := api.IAMAPI.CreateRole(roleName, lambdaDefinition.ID, t2)
+	result, err := api.IAMAPI.CreateRole(roleName, nestorID, t2)
 	if err != nil {
 		t2.Fail(err)
 		return nil, err

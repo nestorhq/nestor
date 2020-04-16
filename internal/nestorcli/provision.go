@@ -148,7 +148,7 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 		var nestorID = "nestor.app.lambda" + lambda.ID
 		t.Section("create lambda:" + lambdaName)
 		t1 := t.SubM(reporter.NewMessage("create Lambda role").WithArg("lambdaName", lambdaName))
-		role, err := api.CreateAppLambdaRole(roleName, lambdaName, lambda, nestorResources, t1)
+		role, err := api.CreateAppLambdaRole(roleName, nestorID, lambdaName, lambda, nestorResources, t1)
 		if err != nil {
 			t1.Fail(err)
 			panic(err)
