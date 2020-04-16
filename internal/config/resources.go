@@ -47,7 +47,7 @@ type ResourceDescription struct {
 
 type registeredResource struct {
 	resourceID   string
-	arn          string
+	awsID        string
 	resourceType ResourceType
 }
 
@@ -129,13 +129,13 @@ func findNestorResourceByID(resourceID string) *ResourceDescription {
 }
 
 // RegisterNestorResource register a resource with its arn
-func (config *Config) RegisterNestorResource(resourceID string, arn string) error {
+func (config *Config) RegisterNestorResource(resourceID string, awsID string) error {
 	resource := findNestorResourceByID(resourceID)
 	if resource == nil {
 		return errors.New("unknown resource:" + resourceID)
 	}
 	_registeredResources[resourceID] = registeredResource{
-		arn:          arn,
+		awsID:        awsID,
 		resourceID:   resourceID,
 		resourceType: resource.resourceType,
 	}
