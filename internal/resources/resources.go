@@ -118,7 +118,7 @@ func NewResources() *Resources {
 }
 
 // IsResourceRequired indicates if a given resource must be provisioned
-func (res *Resources) IsResourceRequired(resourceID string, config *config.Config) (bool, string) {
+func (res *Resources) IsResourceRequired(resourceID string, resDef []config.ResourcesDefinition) (bool, string) {
 	// check first if that's a nestor required resource
 	for _, nestorResource := range res.nestorResources {
 		if nestorResource.ID == resourceID {
@@ -129,7 +129,7 @@ func (res *Resources) IsResourceRequired(resourceID string, config *config.Confi
 	}
 
 	// check if the user requested that resource
-	for _, resource := range config.Resources {
+	for _, resource := range resDef {
 		if resource.ID == resourceID {
 			return true, resourceID
 		}
@@ -156,6 +156,14 @@ func (res *Resources) RegisterNestorResource(resourceID string, awsID string) er
 		awsID:        awsID,
 		resourceID:   resourceID,
 		resourceType: resource.resourceType,
+	}
+	return nil
+}
+
+func (res *Resources) findresourceByID(resourceID string) *RegisteredResource {
+	resource, ok := res.registeredResources[resourceID]
+	if ok {
+		return &resource
 	}
 	return nil
 }

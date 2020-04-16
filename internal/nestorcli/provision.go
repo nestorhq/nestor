@@ -32,7 +32,7 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	}
 
 	// user pool
-	if ok, resID := nestorResources.IsResourceRequired(resources.ResCognitoMain, nestorConfig); ok {
+	if ok, resID := nestorResources.IsResourceRequired(resources.ResCognitoMain, nestorConfig.Resources); ok {
 		t.Section("configure resource:" + resID)
 		var userPoolName = appName + "-" + environment
 		t1 := t.SubM(reporter.NewMessage("create user pool").WithArg("userPoolName", userPoolName))
@@ -48,7 +48,7 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	}
 
 	// dynamodb table
-	if ok, resID := nestorResources.IsResourceRequired(resources.ResDynamoDbTableMain, nestorConfig); ok {
+	if ok, resID := nestorResources.IsResourceRequired(resources.ResDynamoDbTableMain, nestorConfig.Resources); ok {
 		t.Section("configure resource:" + resID)
 		var tableName = appName + "-" + environment + "-main"
 		t1 := t.SubM(reporter.NewMessage("create dynamodb table").WithArg("tableName", tableName))
@@ -64,7 +64,7 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	}
 
 	// event bus
-	if ok, resID := nestorResources.IsResourceRequired(resources.ResEventBridgeMain, nestorConfig); ok {
+	if ok, resID := nestorResources.IsResourceRequired(resources.ResEventBridgeMain, nestorConfig.Resources); ok {
 		t.Section("configure resource:" + resID)
 		var eventBusName = appName + "-" + environment + "-main"
 		t1 := t.SubM(reporter.NewMessage("create event bus").WithArg("eventBusName", eventBusName))
@@ -80,7 +80,7 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	}
 
 	// s3 bucket - storage
-	if ok, resID := nestorResources.IsResourceRequired(resources.ResS3BucketForStorage, nestorConfig); ok {
+	if ok, resID := nestorResources.IsResourceRequired(resources.ResS3BucketForStorage, nestorConfig.Resources); ok {
 		t.Section("configure resource:" + resID)
 		var bucketNameStorage = appName + "-" + environment + "-store"
 		t1 := t.SubM(reporter.NewMessage("create s3 bucket for storage").WithArg("bucketNameStorage", bucketNameStorage))
@@ -96,7 +96,7 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	}
 
 	// s3 bucket - upload
-	if ok, resID := nestorResources.IsResourceRequired(resources.ResS3BucketForUpload, nestorConfig); ok {
+	if ok, resID := nestorResources.IsResourceRequired(resources.ResS3BucketForUpload, nestorConfig.Resources); ok {
 		t.Section("configure resource:" + resID)
 		var bucketNameUpload = appName + "-" + environment + "-upload"
 		t1 := t.SubM(reporter.NewMessage("create s3 bucket for upload").WithArg("bucketNameUpload", bucketNameUpload))
@@ -111,7 +111,7 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 		t0.Log("non required resource:" + resID)
 	}
 	// CreateRestAPI
-	if ok, resID := nestorResources.IsResourceRequired(resources.ResHTTPAPIMain, nestorConfig); ok {
+	if ok, resID := nestorResources.IsResourceRequired(resources.ResHTTPAPIMain, nestorConfig.Resources); ok {
 		t.Section("configure resource:" + resID)
 		var restAPIName = appName + "-" + environment + "-main"
 		t1 := t.SubM(reporter.NewMessage("create Rest API").WithArg("restAPIName", restAPIName))
@@ -126,7 +126,7 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 		t0.Log("non required resource:" + resID)
 	}
 	// CreateLogGroup
-	if ok, resID := nestorResources.IsResourceRequired(resources.ResLogGroupMainEventBridge, nestorConfig); ok {
+	if ok, resID := nestorResources.IsResourceRequired(resources.ResLogGroupMainEventBridge, nestorConfig.Resources); ok {
 		t.Section("configure resource:" + resID)
 		var groupName = "/aws/events/" + appName + "/" + environment + "/mainEventBridgeTarget"
 		t1 := t.SubM(reporter.NewMessage("create CloudWatchGroup ").WithArg("groupName", groupName))
@@ -145,13 +145,22 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	for _, lambda := range nestorConfig.Lambdas {
 		var lambdaName = appName + "-" + environment + "-" + lambda.ID
 		t.Section("create lambda:" + lambdaName)
-		t1 := t.SubM(reporter.NewMessage("create Lambda ").WithArg("lambdaName", lambdaName))
-		_, err := api.CreateLambda(lambdaName, lambda.ID, "arn:aws:iam::464972470401:role/iam_for_events_lambda_prod", t1)
+		t1 := t.SubM(reporter.NewMessage("create Lambda role").WithArg("lambdaName", lambdaName))
+		policyStatements, err := nestorResources.GetPolicyStatementsForLambda(lambda.Permissions)
 		if err != nil {
 			t1.Fail(err)
 			panic(err)
 		}
+		fmt.Printf("@@ policy: %v", policyStatements)
 		t1.Ok()
+
+		t2 := t.SubM(reporter.NewMessage("create Lambda ").WithArg("lambdaName", lambdaName))
+		_, err2 := api.CreateLambda(lambdaName, lambda.ID, "arn:aws:iam::464972470401:role/iam_for_events_lambda_prod", t1)
+		if err2 != nil {
+			t2.Fail(err2)
+			panic(err2)
+		}
+		t2.Ok()
 	}
 
 	t.Ok()
