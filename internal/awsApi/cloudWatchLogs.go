@@ -15,7 +15,7 @@ type CloudWatchLogsAPI struct {
 
 // CloudWatchLogGroupInformation description of a CloudWatch
 type CloudWatchLogGroupInformation struct {
-	groupName string
+	GroupName string
 }
 
 // NewCloudWatchLogsAPI constructor
@@ -101,7 +101,7 @@ func (api *CloudWatchLogsAPI) createLogGroup(groupName string, nestorID string, 
 		t0.Log("log group exists")
 		t0.Ok()
 		return &CloudWatchLogGroupInformation{
-			groupName: groupName,
+			GroupName: groupName,
 		}, nil
 	}
 	t0.Log("log group does not exist")
@@ -119,6 +119,6 @@ func (api *CloudWatchLogsAPI) createLogGroup(groupName string, nestorID string, 
 
 	t0.Ok()
 	return &CloudWatchLogGroupInformation{
-		groupName: groupName,
+		GroupName: groupName,
 	}, nil
 }

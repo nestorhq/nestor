@@ -69,7 +69,7 @@ func NewLambdaAPI(session *session.Session, resourceTags *ResourceTags) (*Lambda
 	return &api, nil
 }
 
-func (api *LambdaAPI) doCreateLambda(lambdaName string, nestorID string, task *reporter.Task) (*LambdaInformation, error) {
+func (api *LambdaAPI) doCreateLambda(lambdaName string, nestorID string, roleArn string, task *reporter.Task) (*LambdaInformation, error) {
 	t0 := task.SubM(reporter.NewMessage("api.client.CreateFunction").WithArg("lambdaName", lambdaName))
 
 	zipData, err := makeZipData(defaultLambda, "index.js")
@@ -87,6 +87,7 @@ func (api *LambdaAPI) doCreateLambda(lambdaName string, nestorID string, task *r
 		Tags:         aws.StringMap(api.resourceTags.getTagsAsMapWithID(nestorID)),
 		Handler:      aws.String("index.handler"),
 		Runtime:      aws.String(lambda.RuntimeNodejs10X),
+		Role:         aws.String(roleArn),
 	}
 	result, err := api.client.CreateFunction(input)
 	if err != nil {
@@ -155,7 +156,7 @@ func (api *LambdaAPI) checkLambdaExistenceAndTags(lambdaName string, nestorID st
 	return lambdaInformation, nil
 }
 
-func (api *LambdaAPI) createLambda(lambdaName string, nestorID string, task *reporter.Task) (*LambdaInformation, error) {
+func (api *LambdaAPI) createLambda(lambdaName string, nestorID string, roleArn string, task *reporter.Task) (*LambdaInformation, error) {
 	t0 := task.SubM(reporter.NewMessage("createLambda").WithArg("lambdaName", lambdaName))
 
 	t1 := t0.Sub("check if lambda exists")
@@ -176,7 +177,7 @@ func (api *LambdaAPI) createLambda(lambdaName string, nestorID string, task *rep
 	}
 
 	t2 := t0.Sub("lambda does not exist - creating it")
-	result, err := api.doCreateLambda(lambdaName, nestorID, t2)
+	result, err := api.doCreateLambda(lambdaName, nestorID, roleArn, t2)
 	if err != nil {
 		t2.Fail(err)
 	}

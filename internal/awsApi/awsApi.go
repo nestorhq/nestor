@@ -131,8 +131,8 @@ func (api *AwsAPI) CreateUserPool(userPoolName string, nestorID string, t *repor
 		t0.Fail(err)
 	} else {
 		t0.Okr(map[string]string{
-			"id":  up.ID,
-			"arn": up.arn,
+			"id":  up.UserPoolID,
+			"arn": up.UserPoolArn,
 		})
 	}
 
@@ -205,12 +205,12 @@ func (api *AwsAPI) CreateCloudWatchGroup(lambdaName string, nestorID string, t *
 }
 
 // CreateLambda create cloudwatch group
-func (api *AwsAPI) CreateLambda(lambdaName string, nestorID string, t *reporter.Task) (*LambdaInformation, error) {
+func (api *AwsAPI) CreateLambda(lambdaName string, nestorID string, roleArn string, t *reporter.Task) (*LambdaInformation, error) {
 	t0 := t.SubM(
 		reporter.NewMessage("Aws API: CreateCloudWatchGroup").
 			WithArg("lambdaName", lambdaName))
 
-	res, error := api.lambdaAPI.createLambda(lambdaName, nestorID, t0)
+	res, error := api.lambdaAPI.createLambda(lambdaName, nestorID, roleArn, t0)
 	if error != nil {
 		t0.Fail(error)
 	}

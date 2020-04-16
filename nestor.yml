@@ -7,3 +7,8 @@ resources:
 
 lambdas:
   - id: 100-snoop
+    permissions:
+      - resourceId: nestor.res.dynamoDbTable.main
+        actions:
+          - operation: read
+          - operation: write

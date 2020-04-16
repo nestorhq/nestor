@@ -15,16 +15,16 @@ type APIGatewayV2API struct {
 
 // APIGatewayV2Information description of a ApiGatewayV2
 type APIGatewayV2Information struct {
-	apiName     string
-	apiID       string
-	apiEndPoint string
+	HTTPApiName     string
+	HTTPApiID       string
+	HTTPApiEndPoint string
 }
 
 func infoAsMap(result *APIGatewayV2Information) map[string]string {
 	return map[string]string{
-		"apiEndPoint": result.apiEndPoint,
-		"apiID":       result.apiID,
-		"apiName":     result.apiName,
+		"apiEndPoint": result.HTTPApiEndPoint,
+		"apiID":       result.HTTPApiID,
+		"apiName":     result.HTTPApiName,
 	}
 }
 
@@ -86,9 +86,9 @@ func (api *APIGatewayV2API) getAPIByID(apiID string, nestorID string, t *reporte
 	t1.Ok()
 
 	return &APIGatewayV2Information{
-		apiID:       *result.ApiId,
-		apiName:     *result.Name,
-		apiEndPoint: *result.ApiEndpoint,
+		HTTPApiID:       *result.ApiId,
+		HTTPApiName:     *result.Name,
+		HTTPApiEndPoint: *result.ApiEndpoint,
 	}, nil
 }
 
@@ -105,9 +105,9 @@ func (api *APIGatewayV2API) doCreateRestAPI(apiName string, nestorID string, t *
 		return nil, err
 	}
 	return &APIGatewayV2Information{
-		apiID:       *result.ApiId,
-		apiName:     *result.Name,
-		apiEndPoint: *result.ApiEndpoint,
+		HTTPApiID:       *result.ApiId,
+		HTTPApiName:     *result.Name,
+		HTTPApiEndPoint: *result.ApiEndpoint,
 	}, nil
 
 }

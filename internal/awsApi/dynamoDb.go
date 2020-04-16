@@ -9,9 +9,9 @@ import (
 
 // TableInformation description of a user pool
 type TableInformation struct {
-	ID        string
-	arn       string
-	tableName string
+	TableID   string
+	TableArn  string
+	TableName string
 }
 
 // DynamoDbAPI Access to DynamoDb API
@@ -76,9 +76,9 @@ func (api *DynamoDbAPI) doCreateMonoTable(tableName string, nestorID string, tas
 	}
 	// fmt.Printf("result: %v\n", result)
 	return &TableInformation{
-		ID:        *result.TableDescription.TableId,
-		arn:       *result.TableDescription.TableArn,
-		tableName: *result.TableDescription.TableName,
+		TableID:   *result.TableDescription.TableId,
+		TableArn:  *result.TableDescription.TableArn,
+		TableName: *result.TableDescription.TableName,
 	}, nil
 }
 
@@ -129,9 +129,9 @@ func (api *DynamoDbAPI) checkTableExistence(tableName string, task *reporter.Tas
 	})
 
 	return &TableInformation{
-		ID:        *result.Table.TableId,
-		arn:       *result.Table.TableArn,
-		tableName: *result.Table.TableName,
+		TableID:   *result.Table.TableId,
+		TableArn:  *result.Table.TableArn,
+		TableName: *result.Table.TableName,
 	}, nil
 }
 
@@ -148,7 +148,7 @@ func (api *DynamoDbAPI) checkTableExistenceAndTags(tableName string, nestorID st
 	}
 
 	t1 := task.SubM(reporter.NewMessage("checkTableTags").WithArg("tableName", tableName))
-	err2 := api.checkTableTags(tableInformation.arn, nestorID, t1)
+	err2 := api.checkTableTags(tableInformation.TableArn, nestorID, t1)
 	if err2 != nil {
 		t1.Fail(err2)
 		return nil, err2
@@ -169,9 +169,9 @@ func (api *DynamoDbAPI) createMonoTable(tableName string, nestorID string, task 
 	if tableInformation != nil {
 		t1.Log("table exists")
 		t1.Okr(map[string]string{
-			"ID":        tableInformation.ID,
-			"arn":       tableInformation.arn,
-			"tableName": tableInformation.tableName,
+			"ID":        tableInformation.TableID,
+			"arn":       tableInformation.TableArn,
+			"tableName": tableInformation.TableName,
 		})
 
 		return tableInformation, nil
@@ -184,9 +184,9 @@ func (api *DynamoDbAPI) createMonoTable(tableName string, nestorID string, task 
 	}
 	t2.Ok()
 	t0.Okr(map[string]string{
-		"ID":        result.ID,
-		"arn":       result.arn,
-		"tableName": result.tableName,
+		"ID":        result.TableID,
+		"arn":       result.TableArn,
+		"tableName": result.TableName,
 	})
 	return result, nil
 }

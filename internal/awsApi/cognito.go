@@ -15,8 +15,8 @@ type CognitoAPI struct {
 
 // UserPoolInformation description of a user pool
 type UserPoolInformation struct {
-	ID  string
-	arn string
+	UserPoolID  string
+	UserPoolArn string
 }
 
 // NewCognitoAPI constructor
@@ -28,14 +28,14 @@ func NewCognitoAPI(session *session.Session, resourceTags *ResourceTags, cognito
 }
 
 func (api *CognitoAPI) getUserPoolInformationAndTags(userPoolID string) (*UserPoolInformation, map[string]*string, error) {
-	var result = UserPoolInformation{ID: userPoolID}
+	var result = UserPoolInformation{UserPoolID: userPoolID}
 	info, err := api.client.DescribeUserPool(&cognitoidentityprovider.DescribeUserPoolInput{
 		UserPoolId: &userPoolID,
 	})
 	if err != nil {
 		return &result, nil, err
 	}
-	result.arn = *info.UserPool.Arn
+	result.UserPoolArn = *info.UserPool.Arn
 	return &result, info.UserPool.UserPoolTags, nil
 }
 
@@ -177,8 +177,8 @@ func (api *CognitoAPI) doCreateUserPool(userPoolName string, nestorID string, ta
 	})
 
 	return &UserPoolInformation{
-		ID:  *result.UserPool.Id,
-		arn: *result.UserPool.Arn,
+		UserPoolID:  *result.UserPool.Id,
+		UserPoolArn: *result.UserPool.Arn,
 	}, nil
 }
 

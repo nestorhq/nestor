@@ -15,8 +15,8 @@ type EventBridgeAPI struct {
 
 // EventBusInformation description of a EventBridge
 type EventBusInformation struct {
-	eventBusName string
-	arn          string
+	EventBusName string
+	EventBusArn  string
 }
 
 // NewEventBridgeAPI constructor
@@ -51,8 +51,8 @@ func (api *EventBridgeAPI) doCreateEventBus(eventBusName string, nestorID string
 	}
 	// fmt.Printf("result: %v\n", result)
 	return &EventBusInformation{
-		arn:          *result.EventBusArn,
-		eventBusName: eventBusName,
+		EventBusArn:  *result.EventBusArn,
+		EventBusName: eventBusName,
 	}, nil
 }
 
@@ -75,8 +75,8 @@ func (api *EventBridgeAPI) checkEventBusExistence(eventBusName string, task *rep
 	})
 
 	return &EventBusInformation{
-		eventBusName: *result.Name,
-		arn:          *result.Arn,
+		EventBusName: *result.Name,
+		EventBusArn:  *result.Arn,
 	}, nil
 }
 
@@ -120,7 +120,7 @@ func (api *EventBridgeAPI) checkEventBusExistenceAndTags(eventBusName string, ne
 	}
 
 	t1 := task.SubM(reporter.NewMessage("checkEventBusTags").WithArg("eventBusName", eventBusName))
-	err2 := api.checkEventBusTags(eventBusInformation.arn, nestorID, t1)
+	err2 := api.checkEventBusTags(eventBusInformation.EventBusArn, nestorID, t1)
 	if err2 != nil {
 		t1.Fail(err2)
 		return nil, err2
@@ -141,8 +141,8 @@ func (api *EventBridgeAPI) createEventBus(eventBusName string, nestorID string, 
 	if eventBusInformation != nil {
 		t1.Log("event bus exists")
 		t1.Okr(map[string]string{
-			"arn":          eventBusInformation.arn,
-			"eventBusName": eventBusInformation.eventBusName,
+			"arn":          eventBusInformation.EventBusArn,
+			"eventBusName": eventBusInformation.EventBusName,
 		})
 
 		return eventBusInformation, nil
@@ -155,8 +155,8 @@ func (api *EventBridgeAPI) createEventBus(eventBusName string, nestorID string, 
 	}
 	t2.Ok()
 	t0.Okr(map[string]string{
-		"arn":          result.arn,
-		"eventBusName": result.eventBusName,
+		"arn":          result.EventBusArn,
+		"eventBusName": result.EventBusName,
 	})
 	return result, nil
 }

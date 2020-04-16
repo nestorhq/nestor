@@ -17,8 +17,8 @@ type S3API struct {
 
 // S3Information description of a S3
 type S3Information struct {
-	bucketName string
-	arn        string
+	BucketName string
+	BucketArn  string
 }
 
 // NewS3API constructor
@@ -31,8 +31,8 @@ func NewS3API(session *session.Session, resourceTags *ResourceTags) (*S3API, err
 
 func mkS3Information(bucketName string) *S3Information {
 	return &S3Information{
-		bucketName: bucketName,
-		arn:        fmt.Sprintf("arn:aws:s3:::%s", bucketName),
+		BucketName: bucketName,
+		BucketArn:  fmt.Sprintf("arn:aws:s3:::%s", bucketName),
 	}
 }
 
@@ -134,8 +134,8 @@ func (api *S3API) createBucket(bucketName string, nestorID string, t *reporter.T
 	t2.Ok()
 
 	t0.Okr(map[string]string{
-		"arn":        result.arn,
-		"bucketName": result.bucketName,
+		"arn":        result.BucketArn,
+		"bucketName": result.BucketName,
 	})
 	return result, nil
 

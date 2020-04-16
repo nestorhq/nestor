@@ -8,9 +8,21 @@ import (
 	"github.com/ghodss/yaml"
 )
 
+// LambdaPermissionAction describe an action allowed
+type LambdaPermissionAction struct {
+	Operation string
+}
+
+// LambdaPermission describe a lambda permission
+type LambdaPermission struct {
+	ResourceID string                   `json:"resourceId"`
+	Actions    []LambdaPermissionAction `json:"actions"`
+}
+
 // LambdasDefinition list the optional resources that we want in the application
 type LambdasDefinition struct {
-	ID string
+	ID          string
+	Permissions []LambdaPermission
 }
 
 // ResourcesDefinition list the optional resources that we want in the application
