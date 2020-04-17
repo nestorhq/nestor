@@ -21,7 +21,7 @@ func (res *Resources) GetPolicyStatementsForLambda(permissions []config.LambdaPe
 	var statements []PolicyStatement
 	for _, permission := range permissions {
 		resourceID := permission.ResourceID
-		resource := res.findresourceByID(resourceID)
+		resource := res.FindResourceByID(resourceID)
 		if resource == nil {
 			return nil, errors.New("Unknown resourceId:" + resourceID)
 		}
@@ -42,7 +42,7 @@ func (res *Resources) GetPolicyStatementsForLambda(permissions []config.LambdaPe
 			}
 			statements = append(statements, PolicyStatement{
 				Effect:   "Allow",
-				Resource: resource.awsID,
+				Resource: resource.GetAttribute(AttArn),
 				Action:   actions,
 			})
 
@@ -65,7 +65,7 @@ func (res *Resources) GetPolicyStatementsForLambda(permissions []config.LambdaPe
 			}
 			statements = append(statements, PolicyStatement{
 				Effect:   "Allow",
-				Resource: resource.awsID,
+				Resource: resource.GetAttribute(AttArn),
 				Action:   actions,
 			})
 

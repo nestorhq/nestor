@@ -31,10 +31,20 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 	if err != nil {
 		panic(err)
 	}
-
 	awsActions := actions.NewActions(environment, api, nestorConfig, nestorResources)
-	err = awsActions.CreateResources(t)
+
+	t1 := t.Sub("create resources")
+	err = awsActions.CreateResources(t1)
 	if err != nil {
+		t1.Fail(err)
+		panic(err)
+	}
+	t1.Ok()
+
+	t2 := t.Sub("create triggers")
+	err = awsActions.CreateTriggers(t2)
+	if err != nil {
+		t2.Fail(err)
 		panic(err)
 	}
 

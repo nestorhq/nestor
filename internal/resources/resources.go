@@ -1,8 +1,6 @@
 package resources
 
 import (
-	"errors"
-
 	"github.com/nestorhq/nestor/internal/config"
 )
 
@@ -41,6 +39,18 @@ const (
 	lambda
 )
 
+// ResourceAttName type for resource attributes names
+type ResourceAttName string
+
+const (
+	// AttArn arn attribute
+	AttArn ResourceAttName = "arn"
+	// AttID id attribute
+	AttID ResourceAttName = "id"
+	// AttName name attribute
+	AttName ResourceAttName = "name"
+)
+
 // ResourceDescription resource description
 type ResourceDescription struct {
 	ID           string // the id of the resource
@@ -52,14 +62,19 @@ type ResourceDescription struct {
 // RegisteredResource decsription of a registered resources
 type RegisteredResource struct {
 	resourceID   string
-	awsID        string // usually arn, but can be other ids
+	attributes   map[ResourceAttName]string
 	resourceType ResourceType
+}
+
+// GetAttribute retrieve attribute
+func (res *RegisteredResource) GetAttribute(name ResourceAttName) string {
+	return res.attributes[name]
 }
 
 // Resources hold the resources
 type Resources struct {
 	// structure to store the registered resources
-	registeredResources map[string]RegisteredResource
+	registeredResources map[string]*RegisteredResource
 	nestorResources     []ResourceDescription
 }
 
@@ -110,7 +125,7 @@ func NewResources() *Resources {
 		},
 	}
 	var result = Resources{
-		registeredResources: make(map[string]RegisteredResource),
+		registeredResources: make(map[string]*RegisteredResource),
 		nestorResources:     nestorResources,
 	}
 
@@ -147,23 +162,28 @@ func (res *Resources) findNestorResourceByID(resourceID string) *ResourceDescrip
 }
 
 // RegisterNestorResource register a resource with its arn
-func (res *Resources) RegisterNestorResource(resourceID string, awsID string) error {
-	resource := res.findNestorResourceByID(resourceID)
-	if resource == nil {
-		return errors.New("unknown resource:" + resourceID)
+func (res *Resources) RegisterNestorResource(resourceID string, attName ResourceAttName, attValue string) error {
+	registered, ok := res.registeredResources[resourceID]
+	if !ok {
+		registered = &RegisteredResource{
+			resourceID:   resourceID,
+			resourceType: unknown, // TODO
+		}
+		registered.attributes = make(map[ResourceAttName]string)
+		res.registeredResources[resourceID] = registered
 	}
-	res.registeredResources[resourceID] = RegisteredResource{
-		awsID:        awsID,
-		resourceID:   resourceID,
-		resourceType: resource.resourceType,
-	}
+	var attributes = registered.attributes
+
+	attributes[attName] = attValue
+
 	return nil
 }
 
-func (res *Resources) findresourceByID(resourceID string) *RegisteredResource {
+// FindResourceByID find creation information about a given resource
+func (res *Resources) FindResourceByID(resourceID string) *RegisteredResource {
 	resource, ok := res.registeredResources[resourceID]
 	if ok {
-		return &resource
+		return resource
 	}
 	return nil
 }

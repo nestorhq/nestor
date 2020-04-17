@@ -27,7 +27,7 @@ func (actions *Actions) CreateResources(task *reporter.Task) error {
 			t1.Fail(err)
 			return err
 		}
-		nestorResources.RegisterNestorResource(resID, res.UserPoolArn)
+		nestorResources.RegisterNestorResource(resID, resources.AttArn, res.UserPoolArn)
 		t1.Ok()
 	} else {
 		t.Log("non required resource:" + resID)
@@ -43,7 +43,7 @@ func (actions *Actions) CreateResources(task *reporter.Task) error {
 			t1.Fail(err)
 			return err
 		}
-		nestorResources.RegisterNestorResource(resID, res.TableArn)
+		nestorResources.RegisterNestorResource(resID, resources.AttArn, res.TableArn)
 		t1.Ok()
 	} else {
 		t.Log("non required resource:" + resID)
@@ -59,7 +59,7 @@ func (actions *Actions) CreateResources(task *reporter.Task) error {
 			t1.Fail(err)
 			return err
 		}
-		nestorResources.RegisterNestorResource(resID, res.EventBusArn)
+		nestorResources.RegisterNestorResource(resID, resources.AttArn, res.EventBusArn)
 		t1.Ok()
 	} else {
 		t.Log("non required resource:" + resID)
@@ -75,7 +75,7 @@ func (actions *Actions) CreateResources(task *reporter.Task) error {
 			t1.Fail(err)
 			return err
 		}
-		nestorResources.RegisterNestorResource(resID, res.BucketArn)
+		nestorResources.RegisterNestorResource(resID, resources.AttArn, res.BucketArn)
 		t1.Ok()
 	} else {
 		t.Log("non required resource:" + resID)
@@ -91,7 +91,7 @@ func (actions *Actions) CreateResources(task *reporter.Task) error {
 			t1.Fail(err)
 			return err
 		}
-		nestorResources.RegisterNestorResource(resID, res.BucketArn)
+		nestorResources.RegisterNestorResource(resID, resources.AttArn, res.BucketArn)
 		t1.Ok()
 	} else {
 		t.Log("non required resource:" + resID)
@@ -106,7 +106,7 @@ func (actions *Actions) CreateResources(task *reporter.Task) error {
 			t1.Fail(err)
 			return err
 		}
-		nestorResources.RegisterNestorResource(resID, res.HTTPApiID)
+		nestorResources.RegisterNestorResource(resID, resources.AttID, res.HTTPApiID)
 		t1.Ok()
 	} else {
 		t.Log("non required resource:" + resID)
@@ -121,7 +121,7 @@ func (actions *Actions) CreateResources(task *reporter.Task) error {
 			t1.Fail(err)
 			return err
 		}
-		nestorResources.RegisterNestorResource(resID, res.GroupName)
+		nestorResources.RegisterNestorResource(resID, resources.AttName, res.GroupName)
 		t1.Ok()
 	} else {
 		t.Log("non required resource:" + resID)

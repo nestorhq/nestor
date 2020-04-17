@@ -1,11 +1,21 @@
 package actions
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/nestorhq/nestor/internal/config"
 	"github.com/nestorhq/nestor/internal/reporter"
+	"github.com/nestorhq/nestor/internal/resources"
 )
 
 func (actions *Actions) createS3UploadTrigger(s3Trigger config.TriggerS3UploadDefinition) error {
+	var nestorResources = actions.nestorResources
+	s3UploadRes := nestorResources.FindResourceByID(resources.ResS3BucketForUpload)
+	if s3UploadRes == nil {
+		return errors.New("ResS3BucketForUpload resource not registered")
+	}
+	fmt.Printf("ResS3BucketForUpload: %#v", s3UploadRes)
 	return nil
 }
 
