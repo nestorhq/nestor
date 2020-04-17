@@ -9,7 +9,7 @@ import (
 )
 
 // TrigerS3UploadDefinition trigger associated to s3 upload
-type TrigerS3UploadDefinition struct {
+type TriggerS3UploadDefinition struct {
 	Lambda string
 	Prefix string
 	Suffix string
@@ -17,7 +17,7 @@ type TrigerS3UploadDefinition struct {
 
 // TriggersDefinition triggers description
 type TriggersDefinition struct {
-	S3upload []TrigerS3UploadDefinition `json:"s3upload"`
+	S3upload []TriggerS3UploadDefinition `json:"s3upload"`
 }
 
 // LambdaPermissionAction describe an action allowed

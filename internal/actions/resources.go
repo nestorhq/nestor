@@ -1,15 +1,17 @@
 package actions
 
 import (
-	"github.com/nestorhq/nestor/internal/awsapi"
-	"github.com/nestorhq/nestor/internal/config"
 	"github.com/nestorhq/nestor/internal/reporter"
 	"github.com/nestorhq/nestor/internal/resources"
 )
 
 // CreateResources processing for provision CLI command
-func CreateResources(environment string, api *awsapi.AwsAPI, nestorConfig *config.Config, nestorResources *resources.Resources, task *reporter.Task) error {
-	var appName = nestorConfig.Application.Name
+func (actions *Actions) CreateResources(task *reporter.Task) error {
+	var appName = actions.nestorConfig.Application.Name
+	var environment = actions.environment
+	var api = actions.api
+	var nestorConfig = actions.nestorConfig
+	var nestorResources = actions.nestorResources
 
 	var t = task.SubM(reporter.NewMessage("CreateResources").
 		WithArg("environment", environment).
@@ -94,11 +96,11 @@ func CreateResources(environment string, api *awsapi.AwsAPI, nestorConfig *confi
 	} else {
 		t.Log("non required resource:" + resID)
 	}
-	// CreateRestAPI
+
 	if ok, resID := nestorResources.IsResourceRequired(resources.ResHTTPAPIMain, nestorConfig.Resources); ok {
 		t.Section("configure resource:" + resID)
 		var restAPIName = appName + "-" + environment + "-main"
-		t1 := t.SubM(reporter.NewMessage("create Rest API").WithArg("restAPIName", restAPIName))
+		t1 := t.SubM(reporter.NewMessage("create RestAPI").WithArg("restAPIName", restAPIName))
 		res, err := api.CreateRestAPI(restAPIName, resID, t1)
 		if err != nil {
 			t1.Fail(err)
@@ -132,7 +134,7 @@ func CreateResources(environment string, api *awsapi.AwsAPI, nestorConfig *confi
 		var nestorID = "nestor.app.lambda" + lambda.ID
 		t.Section("create lambda:" + lambdaName)
 		t1 := t.SubM(reporter.NewMessage("create Lambda role").WithArg("lambdaName", lambdaName))
-		role, err := api.CreateAppLambdaRole(roleName, nestorID, lambdaName, lambda, nestorResources, t1)
+		role, err := api.CreateAppLambdaRole(roleName, nestorID, lambdaName, lambda, actions.nestorResources, t1)
 		if err != nil {
 			t1.Fail(err)
 			return err
