@@ -8,10 +8,16 @@ import (
 	"github.com/ghodss/yaml"
 )
 
+// TrigerS3UploadDefinition trigger associated to s3 upload
+type TrigerS3UploadDefinition struct {
+	Lambda string
+	Prefix string
+	Suffix string
+}
+
 // TriggersDefinition triggers description
 type TriggersDefinition struct {
-	Type   string
-	Lambda string
+	S3upload []TrigerS3UploadDefinition `json:"s3upload"`
 }
 
 // LambdaPermissionAction describe an action allowed

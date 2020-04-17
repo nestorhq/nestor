@@ -1,7 +1,7 @@
 nestor: "1.0"
 application:
   name: myapp
-# list optional resources that we need i the application
+# list optional resources that we need in the application
 resources:
   - id: nestor.res.logGroup.mainEventBridgeTarget
 
@@ -20,8 +20,7 @@ lambdas:
           - operation: delete
 
 triggers:
-  - type: s3
-    lambda: s3-uploads
-    # s3:
-    #   prefix: /upload
-    #   suffix: *.png
+  - s3upload:
+    - lambda: 200-s3-uploads
+      prefix: /upload
+      suffix: "*.png"
