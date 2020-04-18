@@ -8,12 +8,17 @@ import (
 	"github.com/ghodss/yaml"
 )
 
-// TriggerS3CopyDefinition trigger associated to s3 upload
-type TriggerS3CopyDefinition struct {
-	BucketID string `json:"bucketId"`
+// TriggerS3CopyNotificationDefinition trigger associated to s3 upload
+type TriggerS3CopyNotificationDefinition struct {
 	LambdaID string `json:"lambdaId"`
 	Prefix   string `json:"prefix"`
 	Suffix   string `json:"suffix"`
+}
+
+// TriggerS3CopyDefinition trigger associated to s3 upload
+type TriggerS3CopyDefinition struct {
+	BucketID string                                `json:"bucketId"`
+	Lambdas  []TriggerS3CopyNotificationDefinition `json:"lambdas"`
 }
 
 // TriggersDefinition triggers description

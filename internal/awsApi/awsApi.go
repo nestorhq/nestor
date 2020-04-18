@@ -14,6 +14,7 @@ import (
 // AwsAPI api to work on AWS
 type AwsAPI struct {
 	profileName       string
+	account           string
 	session           *session.Session
 	resourceTags      *ResourceTags
 	dynamoDbAPI       *DynamoDbAPI
@@ -92,6 +93,7 @@ func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, co
 		"arn":     *result.Arn,
 		"userId":  *result.UserId,
 	})
+	awsAPI.account = *result.Account
 
 	t3 := t0.Sub("create dynamoDb API")
 	// initialize different AWS Apis
@@ -107,7 +109,7 @@ func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, co
 		return nil, err
 	}
 	t5 := t0.Sub("create Lambda API")
-	awsAPI.lambdaAPI, err = NewLambdaAPI(sess, resourceTags)
+	awsAPI.lambdaAPI, err = NewLambdaAPI(sess, resourceTags, awsAPI.account)
 	if err != nil {
 		t5.Fail(err)
 		return nil, err
@@ -181,6 +183,7 @@ func (api *AwsAPI) CreateMonoTable(tableName string, nestorID string, t *reporte
 	if error != nil {
 		t0.Fail(error)
 	}
+	t0.Ok()
 	return res, error
 }
 
@@ -194,6 +197,7 @@ func (api *AwsAPI) CreateEventBus(eventBusName string, nestorID string, t *repor
 	if error != nil {
 		t0.Fail(error)
 	}
+	t0.Ok()
 	return res, error
 }
 
@@ -207,6 +211,7 @@ func (api *AwsAPI) CreateBucket(bucketName string, nestorID string, t *reporter.
 	if error != nil {
 		t0.Fail(error)
 	}
+	t0.Ok()
 	return res, error
 }
 
@@ -220,6 +225,7 @@ func (api *AwsAPI) CreateRestAPI(apiName string, nestorID string, t *reporter.Ta
 	if error != nil {
 		t0.Fail(error)
 	}
+	t0.Ok()
 	return res, error
 }
 
@@ -233,6 +239,7 @@ func (api *AwsAPI) CreateCloudWatchGroup(lambdaName string, nestorID string, t *
 	if error != nil {
 		t0.Fail(error)
 	}
+	t0.Ok()
 	return res, error
 }
 
@@ -252,6 +259,7 @@ func (api *AwsAPI) CreateAppLambdaRole(roleName string, nestorID string, lambdaN
 		t2.Fail(err)
 		return nil, err
 	}
+	t2.Ok()
 
 	const lambdaExecutionRolePolicy = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 
@@ -261,14 +269,15 @@ func (api *AwsAPI) CreateAppLambdaRole(roleName string, nestorID string, lambdaN
 		t3.Fail(err)
 		return nil, err
 	}
+	t3.Ok()
 
 	t4 := t.SubM(reporter.NewMessage("AttachCustomRolePolicy").WithArg("roleName", roleName))
 	err = api.IAMAPI.AttachCustomRolePolicy(result.RoleName, "nestorCustomPolicy", customPolicyStatements, t4)
 	if err != nil {
-		t3.Fail(err)
+		t4.Fail(err)
 		return nil, err
 	}
-
+	t4.Ok()
 	return result, nil
 }
 
@@ -298,5 +307,37 @@ func (api *AwsAPI) CreateLambda(lambdaName string, nestorID string, roleArn stri
 		t0.Fail(errTop)
 		return nil, err
 	}
+	t0.Ok()
 	return result, nil
+}
+
+// GiveS3LambdaInvokePermission return bucket configuration
+func (api *AwsAPI) GiveS3LambdaInvokePermission(lambdaArn string, bucketArn string, bucketName string, t *reporter.Task) error {
+	t0 := t.SubM(
+		reporter.NewMessage("Aws API: GiveS3LambdaInvokePermission").
+			WithArg("lambdaArn", lambdaArn).
+			WithArg("bucketName", bucketName))
+
+	error := api.lambdaAPI.giveS3InvokePermission(lambdaArn, bucketArn, bucketName, t0)
+	if error != nil {
+		t0.Fail(error)
+	}
+	t0.Ok()
+	return nil
+
+}
+
+// SetBucketNotificationConfiguration return bucket configuration
+func (api *AwsAPI) SetBucketNotificationConfiguration(bucketName string, notification *S3NotificationDefinition, t *reporter.Task) error {
+	t0 := t.SubM(
+		reporter.NewMessage("Aws API: setNotificationConfiguration").
+			WithArg("bucketName", bucketName))
+
+	error := api.s3API.setNotificationConfiguration(bucketName, notification, t0)
+	if error != nil {
+		t0.Fail(error)
+	}
+	t0.Ok()
+	return nil
+
 }

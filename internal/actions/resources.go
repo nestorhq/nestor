@@ -78,6 +78,7 @@ func (actions *Actions) CreateResources(task *reporter.Task) error {
 			return err
 		}
 		nestorResources.RegisterNestorResource(resourceID, resources.S3Bucket, resources.AttArn, res.BucketArn)
+		nestorResources.RegisterNestorResource(resourceID, resources.S3Bucket, resources.AttName, res.BucketName)
 		t1.Ok()
 	}
 
@@ -138,7 +139,8 @@ func (actions *Actions) CreateResources(task *reporter.Task) error {
 			t2.Fail(err2)
 			return err2
 		}
-		nestorResources.RegisterNestorResource(resourceID, resources.LambdaFunction, resources.AttID, res.FunctionArn)
+		nestorResources.RegisterNestorResource(resourceID, resources.LambdaFunction, resources.AttArn, res.FunctionArn)
+		nestorResources.RegisterNestorResource(resourceID, resources.LambdaFunction, resources.AttName, res.FunctionName)
 		t2.Ok()
 	}
 

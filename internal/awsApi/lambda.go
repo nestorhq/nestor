@@ -3,6 +3,7 @@ package awsapi
 import (
 	"archive/zip"
 	"bytes"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -14,6 +15,7 @@ import (
 type LambdaAPI struct {
 	resourceTags *ResourceTags
 	client       *lambda.Lambda
+	account      string
 }
 
 // LambdaInformation description of a lambda
@@ -62,8 +64,8 @@ func makeZipData(content string, fileName string) ([]byte, error) {
 }
 
 // NewLambdaAPI constructor
-func NewLambdaAPI(session *session.Session, resourceTags *ResourceTags) (*LambdaAPI, error) {
-	var api = LambdaAPI{resourceTags: resourceTags}
+func NewLambdaAPI(session *session.Session, resourceTags *ResourceTags, account string) (*LambdaAPI, error) {
+	var api = LambdaAPI{resourceTags: resourceTags, account: account}
 	// Create Lambda client
 	api.client = lambda.New(session)
 	return &api, nil
@@ -188,4 +190,72 @@ func (api *LambdaAPI) createLambda(lambdaName string, nestorID string, roleArn s
 		"arn":          result.FunctionArn,
 	})
 	return result, nil
+}
+
+func (api *LambdaAPI) addInvokePermission(lambdaArn string, sid string, principal string, sourceArn string, task *reporter.Task) error {
+	t0 := task.SubM(reporter.NewMessage("addInvokePermission").
+		WithArg("lambdaArn", lambdaArn).
+		WithArg("sid", sid))
+
+	input := &lambda.AddPermissionInput{
+		Action:        aws.String("lambda:InvokeFunction"),
+		FunctionName:  aws.String(lambdaArn),
+		Principal:     aws.String(principal),
+		StatementId:   aws.String(sid),
+		SourceAccount: aws.String(api.account),
+		SourceArn:     aws.String(sourceArn),
+	}
+	fmt.Printf("@@ AddPermissionInput: %#v\n", input)
+	_, err := api.client.AddPermission(input)
+	if err != nil {
+		// if getAwsErrorCode(err) == "ResourceNotFoundException" {
+		// 	return nil
+		// }
+		t0.Fail(err)
+		return err
+	}
+	t0.Ok()
+	return nil
+}
+
+func (api *LambdaAPI) removePermission(lambdaArn string, sid string, task *reporter.Task) error {
+	t0 := task.SubM(reporter.NewMessage("removePermission").
+		WithArg("lambdaArn", lambdaArn).
+		WithArg("sid", sid))
+
+	input := &lambda.RemovePermissionInput{
+		FunctionName: aws.String(lambdaArn),
+		StatementId:  aws.String(sid),
+	}
+	_, err := api.client.RemovePermission(input)
+	if err != nil {
+		if getAwsErrorCode(err) == "ResourceNotFoundException" {
+			t0.Ok()
+			return nil
+		}
+		t0.Fail(err)
+		return err
+	}
+	t0.Ok()
+	return nil
+}
+
+func (api *LambdaAPI) giveS3InvokePermission(lambdaArn string, bucketArn string, bucketName string, task *reporter.Task) error {
+	var sid = "sid-s3invoke-" + bucketName
+	t0 := task.SubM(reporter.NewMessage("giveS3InvokePermission").
+		WithArg("lambdaArn", lambdaArn).
+		WithArg("bucketArn", bucketArn))
+	err := api.removePermission(lambdaArn, sid, t0)
+	if err != nil {
+		t0.Fail(err)
+		return err
+	}
+
+	err = api.addInvokePermission(lambdaArn, sid, "s3.amazonaws.com", bucketArn, t0)
+	if err != nil {
+		t0.Fail(err)
+		return err
+	}
+	t0.Ok()
+	return nil
 }

@@ -21,6 +21,18 @@ type S3Information struct {
 	BucketArn  string
 }
 
+// S3NotificationLambdaDefinition def
+type S3NotificationLambdaDefinition struct {
+	LambdaArn string
+	Prefix    string
+	Suffix    string
+}
+
+// S3NotificationDefinition def
+type S3NotificationDefinition struct {
+	Lambdas []S3NotificationLambdaDefinition
+}
+
 // NewS3API constructor
 func NewS3API(session *session.Session, resourceTags *ResourceTags) (*S3API, error) {
 	var api = S3API{resourceTags: resourceTags}
@@ -140,5 +152,48 @@ func (api *S3API) createBucket(bucketName string, nestorID string, t *reporter.T
 		"bucketName": result.BucketName,
 	})
 	return result, nil
+
+}
+
+// GetNotificationConfiguration retrieve bucket notification configuration
+func (api *S3API) setNotificationConfiguration(bucketName string, notification *S3NotificationDefinition, t *reporter.Task) error {
+	t0 := t.SubM(reporter.NewMessage("api.client.PutBucketNotificationConfiguration").WithArg("bucketName", bucketName))
+	input := &s3.PutBucketNotificationConfigurationInput{
+		Bucket: aws.String(bucketName),
+		NotificationConfiguration: &s3.NotificationConfiguration{
+			LambdaFunctionConfigurations: []*s3.LambdaFunctionConfiguration{},
+		},
+	}
+	var lambdaFunctionConfigurations = input.NotificationConfiguration.LambdaFunctionConfigurations
+	for _, lambdaNotif := range notification.Lambdas {
+		lambdaFunctionConfigurations = append(lambdaFunctionConfigurations, &s3.LambdaFunctionConfiguration{
+			LambdaFunctionArn: &lambdaNotif.LambdaArn,
+			Events:            []*string{aws.String("s3:ObjectCreated:*")},
+			Filter: &s3.NotificationConfigurationFilter{
+				Key: &s3.KeyFilter{
+					FilterRules: []*s3.FilterRule{{
+						Name:  aws.String("prefix"),
+						Value: aws.String(lambdaNotif.Prefix),
+					}, {
+						Name:  aws.String("suffix"),
+						Value: aws.String(lambdaNotif.Suffix),
+					}},
+				},
+			},
+		})
+	}
+	input.NotificationConfiguration.LambdaFunctionConfigurations = lambdaFunctionConfigurations
+
+	fmt.Printf("@@ input: %s\n", input.GoString())
+	result, err := api.client.PutBucketNotificationConfiguration(input)
+	if err != nil {
+		t0.Fail(err)
+		return err
+	}
+	t0.LogM(reporter.NewMessage("PutBucketNotificationConfiguration").
+		WithArg("input", input.GoString()).
+		WithArg("result", result.GoString()))
+
+	return nil
 
 }

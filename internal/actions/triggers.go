@@ -4,40 +4,59 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/nestorhq/nestor/internal/config"
+	"github.com/nestorhq/nestor/internal/awsapi"
 	"github.com/nestorhq/nestor/internal/reporter"
+	"github.com/nestorhq/nestor/internal/resources"
 )
 
-func (actions *Actions) createS3UploadTrigger(s3Trigger config.TriggerS3CopyDefinition) error {
-	var nestorResources = actions.nestorResources
-	s3UploadRes := nestorResources.FindResourceByID(s3Trigger.BucketID)
-	if s3UploadRes == nil {
-		return errors.New("s3uploadTrigger: bucket not registered:" + s3Trigger.BucketID)
-	}
-	lambdaRes := nestorResources.FindResourceByID(s3Trigger.LambdaID)
-	if lambdaRes == nil {
-		return errors.New("s3uploadTrigger: lambda not registered:" + s3Trigger.LambdaID)
-	}
-	fmt.Printf("ResS3BucketForUpload: %#v", s3UploadRes)
-	fmt.Printf("lambdaRes: %#v", lambdaRes)
-	return nil
-}
-
 // CreateTriggers processing for provision CLI command
+// reference:
+// https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html
 func (actions *Actions) CreateTriggers(task *reporter.Task) error {
 	// var appName = actions.nestorConfig.Application.Name
 	// var environment = actions.environment
-	// var api = actions.api
+	var api = actions.api
 	var nestorConfig = actions.nestorConfig
-	// var nestorResources = actions.nestorResources
+	var nestorResources = actions.nestorResources
 
 	var err error
 	var triggers = nestorConfig.Triggers
 	// s3 triggers
 	for _, s3CopyTrigger := range triggers.S3copy {
-		err = actions.createS3UploadTrigger(s3CopyTrigger)
-		if err != nil {
-			return err
+		s3Resource := nestorResources.FindResourceByID(s3CopyTrigger.BucketID)
+		if s3Resource == nil {
+			return errors.New("s3uploadTrigger: bucket not registered:" + s3CopyTrigger.BucketID)
+		}
+		bucketArn := s3Resource.GetAttribute(resources.AttArn)
+		bucketName := s3Resource.GetAttribute(resources.AttName)
+		t0 := task.SubM(reporter.NewMessage("trigger for s3 bucket").
+			WithArg("bucketName", bucketName).
+			WithArg("bucketArn", s3Resource.GetAttribute(resources.AttArn)))
+		var notification = &awsapi.S3NotificationDefinition{
+			Lambdas: make([]awsapi.S3NotificationLambdaDefinition, 0, 4),
+		}
+		for _, lambdaTrigger := range s3CopyTrigger.Lambdas {
+			lambdaRes := nestorResources.FindResourceByID(lambdaTrigger.LambdaID)
+			lambdaArn := lambdaRes.GetAttribute(resources.AttArn)
+			fmt.Printf("@@ lambdaRes: %#v\n", lambdaRes)
+			if lambdaRes == nil {
+				return errors.New("s3uploadTrigger: lambda not registered:" + lambdaTrigger.LambdaID)
+			}
+			err = api.GiveS3LambdaInvokePermission(lambdaArn, bucketArn, bucketName, t0)
+			if err != nil {
+				return err
+			}
+
+			notification.Lambdas = append(notification.Lambdas, awsapi.S3NotificationLambdaDefinition{
+				LambdaArn: lambdaRes.GetAttribute(resources.AttArn),
+				Prefix:    lambdaTrigger.Prefix,
+				Suffix:    lambdaTrigger.Suffix,
+			})
+
+			err = api.SetBucketNotificationConfiguration(bucketName, notification, t0)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
