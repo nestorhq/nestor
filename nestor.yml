@@ -33,6 +33,6 @@ resources:
 triggers:
   s3copy:
     - bucketId: resources.s3_bucket.upload
-      lambda: 200-s3-uploads
+      lambdaId: resources.lambda_function.200-s3-uploads
       prefix: /upload
       suffix: "*.png"

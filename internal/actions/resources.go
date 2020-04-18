@@ -133,11 +133,12 @@ func (actions *Actions) CreateResources(task *reporter.Task) error {
 		t1.Ok()
 
 		t2 := t.SubM(reporter.NewMessage("create Lambda ").WithArg("lambdaFunctionName", lambdaFunctionName))
-		_, err2 := api.CreateLambda(lambdaFunctionName, resourceID, role.RoleArn, t1)
+		res, err2 := api.CreateLambda(lambdaFunctionName, resourceID, role.RoleArn, t1)
 		if err2 != nil {
 			t2.Fail(err2)
 			return err2
 		}
+		nestorResources.RegisterNestorResource(resourceID, resources.LambdaFunction, resources.AttID, res.FunctionArn)
 		t2.Ok()
 	}
 

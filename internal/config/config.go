@@ -11,7 +11,7 @@ import (
 // TriggerS3CopyDefinition trigger associated to s3 upload
 type TriggerS3CopyDefinition struct {
 	BucketID string `json:"bucketId"`
-	Lambda   string `json:"lambda"`
+	LambdaID string `json:"lambdaId"`
 	Prefix   string `json:"prefix"`
 	Suffix   string `json:"suffix"`
 }

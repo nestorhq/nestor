@@ -12,9 +12,14 @@ func (actions *Actions) createS3UploadTrigger(s3Trigger config.TriggerS3CopyDefi
 	var nestorResources = actions.nestorResources
 	s3UploadRes := nestorResources.FindResourceByID(s3Trigger.BucketID)
 	if s3UploadRes == nil {
-		return errors.New("ResS3BucketForUpload resource not registered")
+		return errors.New("s3uploadTrigger: bucket not registered:" + s3Trigger.BucketID)
+	}
+	lambdaRes := nestorResources.FindResourceByID(s3Trigger.LambdaID)
+	if lambdaRes == nil {
+		return errors.New("s3uploadTrigger: lambda not registered:" + s3Trigger.LambdaID)
 	}
 	fmt.Printf("ResS3BucketForUpload: %#v", s3UploadRes)
+	fmt.Printf("lambdaRes: %#v", lambdaRes)
 	return nil
 }
 
@@ -23,18 +28,17 @@ func (actions *Actions) CreateTriggers(task *reporter.Task) error {
 	// var appName = actions.nestorConfig.Application.Name
 	// var environment = actions.environment
 	// var api = actions.api
-	//	var nestorConfig = actions.nestorConfig
+	var nestorConfig = actions.nestorConfig
 	// var nestorResources = actions.nestorResources
 
-	// var err error
-	// // s3 triggers
-	// for _, trigger := range nestorConfig.Triggers {
-	// 	for _, s3CopyTrigger := range trigger.S3copy {
-	// 		err = actions.createS3UploadTrigger(s3CopyTrigger)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 	}
-	// }
+	var err error
+	var triggers = nestorConfig.Triggers
+	// s3 triggers
+	for _, s3CopyTrigger := range triggers.S3copy {
+		err = actions.createS3UploadTrigger(s3CopyTrigger)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

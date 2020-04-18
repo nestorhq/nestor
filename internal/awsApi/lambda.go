@@ -18,8 +18,8 @@ type LambdaAPI struct {
 
 // LambdaInformation description of a lambda
 type LambdaInformation struct {
-	functionName string
-	arn          string
+	FunctionName string
+	FunctionArn  string
 }
 
 const defaultLambda = `exports.handler = async (event, context, callback) => {
@@ -102,8 +102,8 @@ func (api *LambdaAPI) doCreateLambda(lambdaName string, nestorID string, roleArn
 	})
 
 	return &LambdaInformation{
-		functionName: *result.FunctionName,
-		arn:          *result.FunctionArn,
+		FunctionName: *result.FunctionName,
+		FunctionArn:  *result.FunctionArn,
 	}, nil
 
 }
@@ -129,8 +129,8 @@ func (api *LambdaAPI) checkLambdaExistence(lambdaName string, task *reporter.Tas
 	})
 
 	return &LambdaInformation{
-		functionName: *result.Configuration.FunctionName,
-		arn:          *result.Configuration.FunctionArn,
+		FunctionName: *result.Configuration.FunctionName,
+		FunctionArn:  *result.Configuration.FunctionArn,
 	}, result.Tags, nil
 
 }
@@ -169,8 +169,8 @@ func (api *LambdaAPI) createLambda(lambdaName string, nestorID string, roleArn s
 	if lambdaInformation != nil {
 		t1.Log("table exists")
 		t1.Okr(map[string]string{
-			"functionName": lambdaInformation.functionName,
-			"arn":          lambdaInformation.arn,
+			"functionName": lambdaInformation.FunctionName,
+			"arn":          lambdaInformation.FunctionArn,
 		})
 
 		return lambdaInformation, nil
@@ -184,8 +184,8 @@ func (api *LambdaAPI) createLambda(lambdaName string, nestorID string, roleArn s
 	}
 	t2.Ok()
 	t0.Okr(map[string]string{
-		"functionName": result.functionName,
-		"arn":          result.arn,
+		"functionName": result.FunctionName,
+		"arn":          result.FunctionArn,
 	})
 	return result, nil
 }
