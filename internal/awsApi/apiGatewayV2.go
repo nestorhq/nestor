@@ -119,6 +119,10 @@ func (api *APIGatewayV2API) checkRestAPIExistenceAndTags(apiName string, nestorI
 		t0.Fail(err)
 		return nil, err
 	}
+	if apiID == "" {
+		t0.Log("REST API not found")
+		return nil, nil
+	}
 
 	t1 := t.SubM(reporter.NewMessage("getAPIByID").WithArg("apiID", apiID))
 	result, err := api.getAPIByID(apiID, nestorID, t1)
@@ -144,6 +148,7 @@ func (api *APIGatewayV2API) createRestAPI(apiName string, nestorID string, t *re
 	result, err = api.doCreateRestAPI(apiName, nestorID, t1)
 	if err != nil {
 		t1.Fail(err)
+		return nil, err
 	}
 	t1.Ok()
 	t0.Okr(infoAsMap(result))

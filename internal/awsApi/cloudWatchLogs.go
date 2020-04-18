@@ -39,9 +39,9 @@ func (api *CloudWatchLogsAPI) checkLogGroupTags(groupName string, nestorID strin
 		t0.Fail(err)
 		return false, err
 	}
-	t0.LogM(reporter.NewMessage("tags for resource").
-		WithArg("input", input.GoString()).
-		WithArg("result", result.GoString()))
+	// t0.LogM(reporter.NewMessage("tags for resource").
+	// 	WithArg("input", input.GoString()).
+	// 	WithArg("result", result.GoString()))
 
 	// check tags
 	t1 := task.SubM(reporter.NewMessage("checkTags").WithArgs(result.Tags))

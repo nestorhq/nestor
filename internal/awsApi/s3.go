@@ -123,6 +123,7 @@ func (api *S3API) createBucket(bucketName string, nestorID string, t *reporter.T
 	result, err = api.doCreateBucket(bucketName, nestorID, t1)
 	if err != nil {
 		t1.Fail(err)
+		return nil, err
 	}
 	t1.Ok()
 
@@ -130,6 +131,7 @@ func (api *S3API) createBucket(bucketName string, nestorID string, t *reporter.T
 	err = api.doTagBucket(bucketName, nestorID, t2)
 	if err != nil {
 		t2.Fail(err)
+		return nil, err
 	}
 	t2.Ok()
 

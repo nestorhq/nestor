@@ -237,7 +237,7 @@ func (api *AwsAPI) CreateCloudWatchGroup(lambdaName string, nestorID string, t *
 }
 
 // CreateAppLambdaRole create role for lambda
-func (api *AwsAPI) CreateAppLambdaRole(roleName string, nestorID string, lambdaName string, lambdaDefinition config.LambdaDefinition, nestorResources *resources.Resources, t *reporter.Task) (*RoleInformation, error) {
+func (api *AwsAPI) CreateAppLambdaRole(roleName string, nestorID string, lambdaName string, lambdaDefinition config.ResourcesLambdaFunctionDefinition, nestorResources *resources.Resources, t *reporter.Task) (*RoleInformation, error) {
 	t1 := t.SubM(reporter.NewMessage("GetPolicyStatementsForLambda").WithArg("lambdaName", lambdaName))
 	customPolicyStatements, err := nestorResources.GetPolicyStatementsForLambda(lambdaDefinition.Permissions)
 	if err != nil {

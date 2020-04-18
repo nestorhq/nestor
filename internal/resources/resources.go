@@ -4,39 +4,25 @@ import (
 	"github.com/nestorhq/nestor/internal/config"
 )
 
-// ResCognitoMain resource id
-const ResCognitoMain = "nestor.res.cognito.main"
-
-// ResDynamoDbTableMain resource id
-const ResDynamoDbTableMain = "nestor.res.dynamoDbTable.main"
-
-// ResEventBridgeMain resource id
-const ResEventBridgeMain = "nestor.res.eventBridge.main"
-
-// ResS3BucketForStorage resource id
-const ResS3BucketForStorage = "nestor.res.s3.storage"
-
-// ResS3BucketForUpload reource id
-const ResS3BucketForUpload = "nestor.res.s3.upload"
-
-// ResHTTPAPIMain resource id
-const ResHTTPAPIMain = "nestor.res.httpApi.main"
-
-// ResLogGroupMainEventBridge resource id
-const ResLogGroupMainEventBridge = "nestor.res.logGroup.mainEventBridgeTarget"
-
 // ResourceType defines the type of a resource
 type ResourceType int
 
 const (
 	unknown ResourceType = iota
-	cognitoUserPool
-	dynamoDbTable
-	eventBridgeBus
-	s3Bucket
-	httpAPIGateway
-	cloudwatchLogGroup
-	lambda
+	// CognitoUserPool type
+	CognitoUserPool
+	// DynamoDbTable type
+	DynamoDbTable
+	//EventBridgeBus type
+	EventBridgeBus
+	//S3Bucket type
+	S3Bucket
+	// HTTPAPIGateway type
+	HTTPAPIGateway
+	// CloudwatchLogGroup type
+	CloudwatchLogGroup
+	// LambdaFunction type
+	LambdaFunction
 )
 
 // ResourceAttName type for resource attributes names
@@ -80,53 +66,8 @@ type Resources struct {
 
 // NewResources ctor
 func NewResources() *Resources {
-	var nestorResources = []ResourceDescription{
-		{
-			ID:           ResCognitoMain,
-			description:  "the application cognito user pool",
-			isOptional:   false,
-			resourceType: cognitoUserPool,
-		},
-		{
-			ID:           ResDynamoDbTableMain,
-			description:  "the main dynamoDb table (following a single table pattern)",
-			isOptional:   false,
-			resourceType: dynamoDbTable,
-		},
-		{
-			ID:           ResEventBridgeMain,
-			description:  "the main event bridge bus",
-			isOptional:   false,
-			resourceType: eventBridgeBus,
-		},
-		{
-			ID:           ResS3BucketForStorage,
-			description:  "the s3 bucket name for storage",
-			isOptional:   false,
-			resourceType: s3Bucket,
-		},
-		{
-			ID:           ResS3BucketForUpload,
-			description:  "the s3 bucket name for upload",
-			isOptional:   false,
-			resourceType: s3Bucket,
-		},
-		{
-			ID:           ResHTTPAPIMain,
-			description:  "the Api Gateway main http service",
-			isOptional:   false,
-			resourceType: httpAPIGateway,
-		},
-		{
-			ID:           ResLogGroupMainEventBridge,
-			description:  "the Cloudwatch group name to push event from main EventBridge",
-			isOptional:   true,
-			resourceType: cloudwatchLogGroup,
-		},
-	}
 	var result = Resources{
 		registeredResources: make(map[string]*RegisteredResource),
-		nestorResources:     nestorResources,
 	}
 
 	return &result
@@ -142,13 +83,6 @@ func (res *Resources) IsResourceRequired(resourceID string, resDef []config.Reso
 			}
 		}
 	}
-
-	// check if the user requested that resource
-	for _, resource := range resDef {
-		if resource.ID == resourceID {
-			return true, resourceID
-		}
-	}
 	return false, resourceID
 }
 
@@ -162,12 +96,12 @@ func (res *Resources) findNestorResourceByID(resourceID string) *ResourceDescrip
 }
 
 // RegisterNestorResource register a resource with its arn
-func (res *Resources) RegisterNestorResource(resourceID string, attName ResourceAttName, attValue string) error {
+func (res *Resources) RegisterNestorResource(resourceID string, resourceType ResourceType, attName ResourceAttName, attValue string) error {
 	registered, ok := res.registeredResources[resourceID]
 	if !ok {
 		registered = &RegisteredResource{
 			resourceID:   resourceID,
-			resourceType: unknown, // TODO
+			resourceType: resourceType,
 		}
 		registered.attributes = make(map[ResourceAttName]string)
 		res.registeredResources[resourceID] = registered

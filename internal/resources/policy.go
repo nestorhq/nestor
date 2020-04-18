@@ -26,7 +26,7 @@ func (res *Resources) GetPolicyStatementsForLambda(permissions []config.LambdaPe
 			return nil, errors.New("Unknown resourceId:" + resourceID)
 		}
 		switch resource.resourceType {
-		case s3Bucket:
+		case S3Bucket:
 			var actions []string
 			for _, action := range permission.Actions {
 				switch action.Operation {
@@ -46,7 +46,7 @@ func (res *Resources) GetPolicyStatementsForLambda(permissions []config.LambdaPe
 				Action:   actions,
 			})
 
-		case dynamoDbTable:
+		case DynamoDbTable:
 			var actions []string
 			for _, action := range permission.Actions {
 				switch action.Operation {

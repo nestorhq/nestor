@@ -17,124 +17,113 @@ func (actions *Actions) CreateResources(task *reporter.Task) error {
 		WithArg("environment", environment).
 		WithArg("appName", appName))
 
-	// user pool
-	if ok, resID := nestorResources.IsResourceRequired(resources.ResCognitoMain, nestorConfig.Resources); ok {
-		t.Section("configure resource:" + resID)
-		var userPoolName = appName + "-" + environment
-		t1 := t.SubM(reporter.NewMessage("create user pool").WithArg("userPoolName", userPoolName))
-		res, err := api.CreateUserPool(userPoolName, resID, t1)
+	t.Section("Create Cognito User Pools")
+	for _, userPool := range nestorConfig.Resources.CognitoUserPool {
+		var userPoolName = appName + "-" + environment + "-" + userPool.ID
+		var resourceID = "resources.cognito_userpool." + userPool.ID
+		t1 := t.SubM(reporter.NewMessage("create user pool").
+			WithArg("userPoolName", userPoolName).
+			WithArg("resourceID", resourceID))
+		res, err := api.CreateUserPool(userPoolName, resourceID, t1)
 		if err != nil {
 			t1.Fail(err)
 			return err
 		}
-		nestorResources.RegisterNestorResource(resID, resources.AttArn, res.UserPoolArn)
+		nestorResources.RegisterNestorResource(resourceID, resources.CognitoUserPool, resources.AttArn, res.UserPoolArn)
 		t1.Ok()
-	} else {
-		t.Log("non required resource:" + resID)
 	}
 
-	// dynamodb table
-	if ok, resID := nestorResources.IsResourceRequired(resources.ResDynamoDbTableMain, nestorConfig.Resources); ok {
-		t.Section("configure resource:" + resID)
-		var tableName = appName + "-" + environment + "-main"
-		t1 := t.SubM(reporter.NewMessage("create dynamodb table").WithArg("tableName", tableName))
-		res, err := api.CreateMonoTable(tableName, resID, t1)
+	t.Section("Create DynamoDb tables")
+	for _, dynamoDbTable := range nestorConfig.Resources.DynamodbTable {
+		var tableName = appName + "-" + environment + "-" + dynamoDbTable.ID
+		var resourceID = "resources.dynamodb_table." + dynamoDbTable.ID
+		t1 := t.SubM(reporter.NewMessage("create dynamodb table").
+			WithArg("tableName", tableName).
+			WithArg("resourceID", resourceID))
+		res, err := api.CreateMonoTable(tableName, resourceID, t1)
 		if err != nil {
 			t1.Fail(err)
 			return err
 		}
-		nestorResources.RegisterNestorResource(resID, resources.AttArn, res.TableArn)
+		nestorResources.RegisterNestorResource(resourceID, resources.DynamoDbTable, resources.AttArn, res.TableArn)
 		t1.Ok()
-	} else {
-		t.Log("non required resource:" + resID)
 	}
 
-	// event bus
-	if ok, resID := nestorResources.IsResourceRequired(resources.ResEventBridgeMain, nestorConfig.Resources); ok {
-		t.Section("configure resource:" + resID)
-		var eventBusName = appName + "-" + environment + "-main"
-		t1 := t.SubM(reporter.NewMessage("create event bus").WithArg("eventBusName", eventBusName))
-		res, err := api.CreateEventBus(eventBusName, resID, t1)
+	t.Section("Create EventBridge buses")
+	for _, eventBridgeBus := range nestorConfig.Resources.EventBridgeBus {
+		var eventBridgeBusName = appName + "-" + environment + "-" + eventBridgeBus.ID
+		var resourceID = "resources.eventbridge_bus." + eventBridgeBus.ID
+		t1 := t.SubM(reporter.NewMessage("create eventBridge bus").
+			WithArg("eventBridgeBusName", eventBridgeBusName).
+			WithArg("resourceID", resourceID))
+		res, err := api.CreateEventBus(eventBridgeBusName, resourceID, t1)
 		if err != nil {
 			t1.Fail(err)
 			return err
 		}
-		nestorResources.RegisterNestorResource(resID, resources.AttArn, res.EventBusArn)
+		nestorResources.RegisterNestorResource(resourceID, resources.EventBridgeBus, resources.AttArn, res.EventBusArn)
 		t1.Ok()
-	} else {
-		t.Log("non required resource:" + resID)
 	}
 
-	// s3 bucket - storage
-	if ok, resID := nestorResources.IsResourceRequired(resources.ResS3BucketForStorage, nestorConfig.Resources); ok {
-		t.Section("configure resource:" + resID)
-		var bucketNameStorage = appName + "-" + environment + "-store"
-		t1 := t.SubM(reporter.NewMessage("create s3 bucket for storage").WithArg("bucketNameStorage", bucketNameStorage))
-		res, err := api.CreateBucket(bucketNameStorage, resID, t1)
+	t.Section("Create S3 buckets")
+	for _, s3Bucket := range nestorConfig.Resources.S3Bucket {
+		var s3BucketName = appName + "-" + environment + "-" + s3Bucket.ID
+		var resourceID = "resources.s3_bucket." + s3Bucket.ID
+		t1 := t.SubM(reporter.NewMessage("create s3 bucket").
+			WithArg("s3BucketName", s3BucketName).
+			WithArg("resourceID", resourceID))
+		res, err := api.CreateBucket(s3BucketName, resourceID, t1)
 		if err != nil {
 			t1.Fail(err)
 			return err
 		}
-		nestorResources.RegisterNestorResource(resID, resources.AttArn, res.BucketArn)
+		nestorResources.RegisterNestorResource(resourceID, resources.S3Bucket, resources.AttArn, res.BucketArn)
 		t1.Ok()
-	} else {
-		t.Log("non required resource:" + resID)
 	}
 
-	// s3 bucket - upload
-	if ok, resID := nestorResources.IsResourceRequired(resources.ResS3BucketForUpload, nestorConfig.Resources); ok {
-		t.Section("configure resource:" + resID)
-		var bucketNameUpload = appName + "-" + environment + "-upload"
-		t1 := t.SubM(reporter.NewMessage("create s3 bucket for upload").WithArg("bucketNameUpload", bucketNameUpload))
-		res, err := api.CreateBucket(bucketNameUpload, resID, t1)
+	t.Section("Create CloudwatchLogs groups")
+	for _, cloudwatchLogGroup := range nestorConfig.Resources.CloudwatchlogsGroup {
+		var cloudwatchLogGroupName = appName + "-" + environment + "-" + cloudwatchLogGroup.ID
+		var resourceID = "resources.cloudwatchlogs_group." + cloudwatchLogGroup.ID
+		t1 := t.SubM(reporter.NewMessage("create cloudwatLogs group").
+			WithArg("cloudwatchLogGroupName", cloudwatchLogGroupName).
+			WithArg("resourceID", resourceID))
+		res, err := api.CreateCloudWatchGroup(cloudwatchLogGroupName, resourceID, t1)
 		if err != nil {
 			t1.Fail(err)
 			return err
 		}
-		nestorResources.RegisterNestorResource(resID, resources.AttArn, res.BucketArn)
+		nestorResources.RegisterNestorResource(resourceID, resources.CloudwatchLogGroup, resources.AttName, res.GroupName)
 		t1.Ok()
-	} else {
-		t.Log("non required resource:" + resID)
 	}
 
-	if ok, resID := nestorResources.IsResourceRequired(resources.ResHTTPAPIMain, nestorConfig.Resources); ok {
-		t.Section("configure resource:" + resID)
-		var restAPIName = appName + "-" + environment + "-main"
-		t1 := t.SubM(reporter.NewMessage("create RestAPI").WithArg("restAPIName", restAPIName))
-		res, err := api.CreateRestAPI(restAPIName, resID, t1)
+	t.Section("Create ApiGateway HTTP")
+	for _, apiGatewayHTTP := range nestorConfig.Resources.ApigatewayHTTP {
+		var apiGatewayHTTPName = appName + "-" + environment + "-" + apiGatewayHTTP.ID
+		var resourceID = "resources.apigateway_http." + apiGatewayHTTP.ID
+		t1 := t.SubM(reporter.NewMessage("create rest API").
+			WithArg("apiGatewayHTTPName", apiGatewayHTTPName).
+			WithArg("resourceID", resourceID))
+		res, err := api.CreateRestAPI(apiGatewayHTTPName, resourceID, t1)
 		if err != nil {
 			t1.Fail(err)
 			return err
 		}
-		nestorResources.RegisterNestorResource(resID, resources.AttID, res.HTTPApiID)
+		nestorResources.RegisterNestorResource(resourceID, resources.HTTPAPIGateway, resources.AttID, res.HTTPApiID)
 		t1.Ok()
-	} else {
-		t.Log("non required resource:" + resID)
-	}
-	// CreateLogGroup
-	if ok, resID := nestorResources.IsResourceRequired(resources.ResLogGroupMainEventBridge, nestorConfig.Resources); ok {
-		t.Section("configure resource:" + resID)
-		var groupName = "/aws/events/" + appName + "/" + environment + "/mainEventBridgeTarget"
-		t1 := t.SubM(reporter.NewMessage("create CloudWatchGroup ").WithArg("groupName", groupName))
-		res, err := api.CreateCloudWatchGroup(groupName, resID, t1)
-		if err != nil {
-			t1.Fail(err)
-			return err
-		}
-		nestorResources.RegisterNestorResource(resID, resources.AttName, res.GroupName)
-		t1.Ok()
-	} else {
-		t.Log("non required resource:" + resID)
 	}
 
-	// Create lambdas
-	for _, lambda := range nestorConfig.Lambdas {
-		var lambdaName = appName + "-" + environment + "-" + lambda.ID
-		var roleName = appName + "-" + environment + "-" + lambda.ID
-		var nestorID = "nestor.app.lambda" + lambda.ID
-		t.Section("create lambda:" + lambdaName)
-		t1 := t.SubM(reporter.NewMessage("create Lambda role").WithArg("lambdaName", lambdaName))
-		role, err := api.CreateAppLambdaRole(roleName, nestorID, lambdaName, lambda, actions.nestorResources, t1)
+	t.Section("Create Lambda Functions")
+	for _, lambdaFunction := range nestorConfig.Resources.LambdaFunction {
+		var lambdaFunctionName = appName + "-" + environment + "-" + lambdaFunction.ID
+		var roleName = appName + "-" + environment + "-" + lambdaFunction.ID
+		var resourceID = "resources.lambda_function." + lambdaFunction.ID
+		t1 := t.SubM(reporter.NewMessage("create lambda role").
+			WithArg("lambdaFunctionName", lambdaFunctionName).
+			WithArg("roleName", roleName).
+			WithArg("resourceID", resourceID))
+
+		role, err := api.CreateAppLambdaRole(roleName, resourceID, lambdaFunctionName, lambdaFunction, actions.nestorResources, t1)
 		if err != nil {
 			t1.Fail(err)
 			return err
@@ -143,14 +132,15 @@ func (actions *Actions) CreateResources(task *reporter.Task) error {
 			WithArg("RoleArn", role.RoleArn).WithArg("RoleName", role.RoleName))
 		t1.Ok()
 
-		t2 := t.SubM(reporter.NewMessage("create Lambda ").WithArg("lambdaName", lambdaName))
-		_, err2 := api.CreateLambda(lambdaName, nestorID, role.RoleArn, t1)
+		t2 := t.SubM(reporter.NewMessage("create Lambda ").WithArg("lambdaFunctionName", lambdaFunctionName))
+		_, err2 := api.CreateLambda(lambdaFunctionName, resourceID, role.RoleArn, t1)
 		if err2 != nil {
 			t2.Fail(err2)
 			return err2
 		}
 		t2.Ok()
 	}
+
 	t.Ok()
 	return nil
 }

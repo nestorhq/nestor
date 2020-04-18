@@ -3,24 +3,36 @@ application:
   name: myapp
 # list optional resources that we need in the application
 resources:
-  - id: nestor.res.logGroup.mainEventBridgeTarget
-
-lambdas:
-  - id: 100-snoop
-    permissions:
-      - resourceId: nestor.res.dynamoDbTable.main
-        actions:
-          - operation: read
-          - operation: write
-  - id: 200-s3-uploads
-    permissions:
-      - resourceId: nestor.res.s3.upload
-        actions:
-          - operation: read
-          - operation: delete
+  cognito_userpool:
+    - id: main
+  dynamodb_table:
+    - id: main
+  eventbridge_bus:
+    - id: main
+  cloudwatchlogs_group:
+    - id: main
+  s3_bucket:
+    - id: upload
+    - id: store
+  apigateway_http:
+    - id: main
+  lambda_function:
+    - id: 100-snoop
+      permissions:
+        - resourceId: resources.dynamodb_table.main
+          actions:
+            - operation: read
+            - operation: write
+    - id: 200-s3-uploads
+      permissions:
+        - resourceId: resources.s3_bucket.upload
+          actions:
+            - operation: read
+            - operation: delete
 
 triggers:
-  - s3upload:
-    - lambda: 200-s3-uploads
+  s3copy:
+    - bucketId: resources.s3_bucket.upload
+      lambda: 200-s3-uploads
       prefix: /upload
       suffix: "*.png"

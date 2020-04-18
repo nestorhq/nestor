@@ -8,16 +8,17 @@ import (
 	"github.com/ghodss/yaml"
 )
 
-// TrigerS3UploadDefinition trigger associated to s3 upload
-type TriggerS3UploadDefinition struct {
-	Lambda string
-	Prefix string
-	Suffix string
+// TriggerS3CopyDefinition trigger associated to s3 upload
+type TriggerS3CopyDefinition struct {
+	BucketID string `json:"bucketId"`
+	Lambda   string `json:"lambda"`
+	Prefix   string `json:"prefix"`
+	Suffix   string `json:"suffix"`
 }
 
 // TriggersDefinition triggers description
 type TriggersDefinition struct {
-	S3upload []TriggerS3UploadDefinition `json:"s3upload"`
+	S3copy []TriggerS3CopyDefinition `json:"s3copy"`
 }
 
 // LambdaPermissionAction describe an action allowed
@@ -31,15 +32,61 @@ type LambdaPermission struct {
 	Actions    []LambdaPermissionAction `json:"actions"`
 }
 
-// LambdaDefinition list the optional resources that we want in the application
-type LambdaDefinition struct {
+// ResourcesLambdaFunctionDefinition list the optional resources that we want in the application
+type ResourcesLambdaFunctionDefinition struct {
 	ID          string
 	Permissions []LambdaPermission
 }
 
+// ResourceCognitoUserPoolDefinition resource definition
+type ResourceCognitoUserPoolDefinition struct {
+	ID string
+}
+
+// ResourceCognitoDefinition definition of resource
+type ResourceCognitoDefinition struct {
+	UserPool ResourceCognitoUserPoolDefinition
+}
+
+// ResourceDynamodbTableDefinition resource definition
+type ResourceDynamodbTableDefinition struct {
+	ID string
+}
+
+// ResourceDynamodbDefinition definition of resource
+type ResourceDynamodbDefinition struct {
+	Table ResourceDynamodbTableDefinition
+}
+
+// ResourceS3BucketDefinition resource definition
+type ResourceS3BucketDefinition struct {
+	ID string
+}
+
+// ResourcesCloudwatchLogsGroupDefinition resource definition
+type ResourcesCloudwatchLogsGroupDefinition struct {
+	ID string
+}
+
+// ResourcesEventBridgeBusDefinition resource definition
+type ResourcesEventBridgeBusDefinition struct {
+	ID string
+}
+
+// ResourcesApigatewayHTTPDefinition resource definition
+type ResourcesApigatewayHTTPDefinition struct {
+	ID string
+}
+
 // ResourceDefinition list the optional resources that we want in the application
 type ResourceDefinition struct {
-	ID string
+	CognitoUserPool     []ResourceCognitoUserPoolDefinition      `json:"cognito_userpool"`
+	DynamodbTable       []ResourceDynamodbTableDefinition        `json:"dynamodb_table"`
+	S3Bucket            []ResourceS3BucketDefinition             `json:"s3_bucket"`
+	LambdaFunction      []ResourcesLambdaFunctionDefinition      `json:"lambda_function"`
+	CloudwatchlogsGroup []ResourcesCloudwatchLogsGroupDefinition `json:"cloudwatchlogs_group"`
+	EventBridgeBus      []ResourcesEventBridgeBusDefinition      `json:"eventbridge_bus"`
+	ApigatewayHTTP      []ResourcesApigatewayHTTPDefinition      `json:"apigateway_http"`
 }
 
 // ApplicationDefinition application definition
@@ -51,9 +98,8 @@ type ApplicationDefinition struct {
 type Config struct {
 	Nestor      string
 	Application ApplicationDefinition `json:"application"`
-	Resources   []ResourceDefinition  `json:"resources"`
-	Lambdas     []LambdaDefinition    `json:"lambdas"`
-	Triggers    []TriggersDefinition  `json:"triggers"`
+	Resources   ResourceDefinition    `json:"resources"`
+	Triggers    TriggersDefinition    `json:"triggers"` //
 }
 
 // ReadConfig read congiration from file

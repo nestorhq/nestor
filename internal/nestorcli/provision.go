@@ -1,8 +1,6 @@
 package nestorcli
 
 import (
-	"fmt"
-
 	"github.com/nestorhq/nestor/internal/actions"
 	"github.com/nestorhq/nestor/internal/awsapi"
 	"github.com/nestorhq/nestor/internal/config"
@@ -17,8 +15,7 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 
 	var t = reporter.NewReporterM(reporter.NewMessage("command: provision").
 		WithArg("environment", environment).
-		WithArg("appName", appName).
-		WithArg("config", fmt.Sprintf("%#v", nestorConfig))).
+		WithArg("appName", appName)).
 		Start()
 
 	// TODO: hard coded

@@ -80,9 +80,9 @@ func (api *IAMAPI) checkRoleExistenceAndTags(roleName string, nestorID string, t
 		t0.Fail(err)
 		return nil, err
 	}
-	t0.LogM(reporter.NewMessage("GetRole result").
-		WithArg("input", input.GoString()).
-		WithArg("result", result.GoString()))
+	// t0.LogM(reporter.NewMessage("GetRole result").
+	// 	WithArg("input", input.GoString()).
+	// 	WithArg("result", result.GoString()))
 
 	// check tags
 	tagsToCheck := map[string]*string{}
@@ -172,14 +172,14 @@ func (api *IAMAPI) AttachManagedPolicy(roleName string, policyArn string, t *rep
 		RoleName:  aws.String(roleName),
 	}
 
-	result, err := api.client.AttachRolePolicy(input)
+	_, err := api.client.AttachRolePolicy(input)
 	if err != nil {
 		t0.Fail(err)
 		return err
 	}
-	t0.LogM(reporter.NewMessage("AttachRolePolicy result").
-		WithArg("input", input.GoString()).
-		WithArg("result", result.GoString()))
+	// t0.LogM(reporter.NewMessage("AttachRolePolicy result").
+	// 	WithArg("input", input.GoString()).
+	// 	WithArg("result", result.GoString()))
 	t0.Ok()
 	return nil
 }
@@ -200,22 +200,21 @@ func (api *IAMAPI) AttachCustomRolePolicy(roleName string, policyName string, po
 
 	t0 = t.SubM(reporter.NewMessage("attach managed policy").
 		WithArg("roleName", roleName).
-		WithArg("policyName", policyName).
-		WithArg("policyDocument", policyDocument))
+		WithArg("policyName", policyName))
 	input := &iam.PutRolePolicyInput{
 		RoleName:       aws.String(roleName),
 		PolicyName:     aws.String(policyName),
 		PolicyDocument: aws.String(policyDocument),
 	}
 
-	result, err := api.client.PutRolePolicy(input)
+	_, err = api.client.PutRolePolicy(input)
 	if err != nil {
 		t0.Fail(err)
 		return err
 	}
-	t0.LogM(reporter.NewMessage("PutRolePolicy result").
-		WithArg("input", input.GoString()).
-		WithArg("result", result.GoString()))
+	// t0.LogM(reporter.NewMessage("PutRolePolicy result").
+	// 	WithArg("input", input.GoString()).
+	// 	WithArg("result", result.GoString()))
 	t0.Ok()
 	return nil
 }
