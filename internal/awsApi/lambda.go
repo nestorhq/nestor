@@ -192,20 +192,21 @@ func (api *LambdaAPI) createLambda(lambdaName string, nestorID string, roleArn s
 	return result, nil
 }
 
-func (api *LambdaAPI) addInvokePermission(lambdaArn string, sid string, principal string, sourceArn string, task *reporter.Task) error {
+func (api *LambdaAPI) addInvokePermission(lambdaArn string, sid string, principal string, sourceArn string, sourceAccount string, task *reporter.Task) error {
 	t0 := task.SubM(reporter.NewMessage("addInvokePermission").
 		WithArg("lambdaArn", lambdaArn).
 		WithArg("sid", sid))
 
 	input := &lambda.AddPermissionInput{
-		Action:        aws.String("lambda:InvokeFunction"),
-		FunctionName:  aws.String(lambdaArn),
-		Principal:     aws.String(principal),
-		StatementId:   aws.String(sid),
-		SourceAccount: aws.String(api.account),
-		SourceArn:     aws.String(sourceArn),
+		Action:       aws.String("lambda:InvokeFunction"),
+		FunctionName: aws.String(lambdaArn),
+		Principal:    aws.String(principal),
+		StatementId:  aws.String(sid),
+		SourceArn:    aws.String(sourceArn),
 	}
-	fmt.Printf("@@ AddPermissionInput: %#v\n", input)
+	if sourceAccount != "" {
+		input.SourceAccount = aws.String(sourceAccount)
+	}
 	_, err := api.client.AddPermission(input)
 	if err != nil {
 		// if getAwsErrorCode(err) == "ResourceNotFoundException" {
@@ -251,7 +252,29 @@ func (api *LambdaAPI) giveS3InvokePermission(lambdaArn string, bucketArn string,
 		return err
 	}
 
-	err = api.addInvokePermission(lambdaArn, sid, "s3.amazonaws.com", bucketArn, t0)
+	err = api.addInvokePermission(lambdaArn, sid, "s3.amazonaws.com", bucketArn, api.account, t0)
+	if err != nil {
+		t0.Fail(err)
+		return err
+	}
+	t0.Ok()
+	return nil
+}
+
+func (api *LambdaAPI) giveAPIGatewayInvokePermission(lambdaArn string, apiID string, task *reporter.Task) error {
+	var sid = "sid-apigwinvoke-" + apiID
+	t0 := task.SubM(reporter.NewMessage("giveS3InvokePermission").
+		WithArg("lambdaArn", lambdaArn).
+		WithArg("apiID", apiID))
+	err := api.removePermission(lambdaArn, sid, t0)
+	if err != nil {
+		t0.Fail(err)
+		return err
+	}
+
+	sourceArn := fmt.Sprintf("arn:aws:execute-api:us-west-1:%s:%s/*/$default", api.account, apiID)
+
+	err = api.addInvokePermission(lambdaArn, sid, "apigateway.amazonaws.com", sourceArn, "", t0)
 	if err != nil {
 		t0.Fail(err)
 		return err

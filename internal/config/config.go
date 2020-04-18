@@ -80,7 +80,8 @@ type ResourcesEventBridgeBusDefinition struct {
 
 // ResourcesApigatewayHTTPDefinition resource definition
 type ResourcesApigatewayHTTPDefinition struct {
-	ID string
+	ID             string
+	TargetLambdaID string
 }
 
 // ResourceDefinition list the optional resources that we want in the application

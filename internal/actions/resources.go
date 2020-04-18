@@ -1,6 +1,8 @@
 package actions
 
 import (
+	"errors"
+
 	"github.com/nestorhq/nestor/internal/reporter"
 	"github.com/nestorhq/nestor/internal/resources"
 )
@@ -98,22 +100,6 @@ func (actions *Actions) CreateResources(task *reporter.Task) error {
 		t1.Ok()
 	}
 
-	t.Section("Create ApiGateway HTTP")
-	for _, apiGatewayHTTP := range nestorConfig.Resources.ApigatewayHTTP {
-		var apiGatewayHTTPName = appName + "-" + environment + "-" + apiGatewayHTTP.ID
-		var resourceID = "resources.apigateway_http." + apiGatewayHTTP.ID
-		t1 := t.SubM(reporter.NewMessage("create rest API").
-			WithArg("apiGatewayHTTPName", apiGatewayHTTPName).
-			WithArg("resourceID", resourceID))
-		res, err := api.CreateRestAPI(apiGatewayHTTPName, resourceID, t1)
-		if err != nil {
-			t1.Fail(err)
-			return err
-		}
-		nestorResources.RegisterNestorResource(resourceID, resources.HTTPAPIGateway, resources.AttID, res.HTTPApiID)
-		t1.Ok()
-	}
-
 	t.Section("Create Lambda Functions")
 	for _, lambdaFunction := range nestorConfig.Resources.LambdaFunction {
 		var lambdaFunctionName = appName + "-" + environment + "-" + lambdaFunction.ID
@@ -141,6 +127,35 @@ func (actions *Actions) CreateResources(task *reporter.Task) error {
 		}
 		nestorResources.RegisterNestorResource(resourceID, resources.LambdaFunction, resources.AttArn, res.FunctionArn)
 		nestorResources.RegisterNestorResource(resourceID, resources.LambdaFunction, resources.AttName, res.FunctionName)
+		t2.Ok()
+	}
+
+	t.Section("Create ApiGateway HTTP")
+	for _, apiGatewayHTTP := range nestorConfig.Resources.ApigatewayHTTP {
+		var apiGatewayHTTPName = appName + "-" + environment + "-" + apiGatewayHTTP.ID
+		var lambdaTarget = nestorResources.FindResourceByID(apiGatewayHTTP.TargetLambdaID)
+		var resourceID = "resources.apigateway_http." + apiGatewayHTTP.ID
+		t1 := t.SubM(reporter.NewMessage("create rest API").
+			WithArg("apiGatewayHTTPName", apiGatewayHTTPName).
+			WithArg("resourceID", resourceID))
+		if lambdaTarget == nil {
+			err := errors.New("can't find target for api gateway:" + apiGatewayHTTP.TargetLambdaID)
+			t1.Fail(err)
+			return err
+		}
+		lambdaTargetArn := lambdaTarget.GetAttribute(resources.AttArn)
+		res, err := api.CreateRestAPI(apiGatewayHTTPName, lambdaTargetArn, resourceID, t1)
+		if err != nil {
+			t1.Fail(err)
+			return err
+		}
+		nestorResources.RegisterNestorResource(resourceID, resources.HTTPAPIGateway, resources.AttID, res.HTTPApiID)
+		t1.Ok()
+
+		t2 := t.SubM(reporter.NewMessage("give Api invoke permission").
+			WithArg("lambdaTargetArn", lambdaTargetArn).
+			WithArg("apiID", res.HTTPApiID))
+		api.GiveAPIGatewayLambdaInvokePermission(lambdaTargetArn, res.HTTPApiID, t2)
 		t2.Ok()
 	}
 

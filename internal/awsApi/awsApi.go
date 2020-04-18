@@ -216,12 +216,12 @@ func (api *AwsAPI) CreateBucket(bucketName string, nestorID string, t *reporter.
 }
 
 // CreateRestAPI create bucket
-func (api *AwsAPI) CreateRestAPI(apiName string, nestorID string, t *reporter.Task) (*APIGatewayV2Information, error) {
+func (api *AwsAPI) CreateRestAPI(apiName string, lambdaTargetArn string, nestorID string, t *reporter.Task) (*APIGatewayV2Information, error) {
 	t0 := t.SubM(
 		reporter.NewMessage("Aws API: CreateRestAPI").
 			WithArg("apiName", apiName))
 
-	res, error := api.APIGatewayV2API.createRestAPI(apiName, nestorID, t0)
+	res, error := api.APIGatewayV2API.createRestAPI(apiName, lambdaTargetArn, nestorID, t0)
 	if error != nil {
 		t0.Fail(error)
 	}
@@ -327,7 +327,23 @@ func (api *AwsAPI) GiveS3LambdaInvokePermission(lambdaArn string, bucketArn stri
 
 }
 
-// SetBucketNotificationConfiguration return bucket configuration
+// GiveAPIGatewayLambdaInvokePermission give invoke auth
+func (api *AwsAPI) GiveAPIGatewayLambdaInvokePermission(lambdaArn string, apiID string, t *reporter.Task) error {
+	t0 := t.SubM(
+		reporter.NewMessage("Aws API: GiveAPIGatewayLambdaInvokePermission").
+			WithArg("lambdaArn", lambdaArn).
+			WithArg("apiID", apiID))
+
+	error := api.lambdaAPI.giveAPIGatewayInvokePermission(lambdaArn, apiID, t0)
+	if error != nil {
+		t0.Fail(error)
+	}
+	t0.Ok()
+	return nil
+
+}
+
+// SetBucketNotificationConfiguration give invoke auth
 func (api *AwsAPI) SetBucketNotificationConfiguration(bucketName string, notification *S3NotificationDefinition, t *reporter.Task) error {
 	t0 := t.SubM(
 		reporter.NewMessage("Aws API: setNotificationConfiguration").

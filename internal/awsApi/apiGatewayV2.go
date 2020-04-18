@@ -1,6 +1,8 @@
 package awsapi
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
@@ -34,6 +36,88 @@ func NewAPIGatewayV2API(session *session.Session, resourceTags *ResourceTags) (*
 	// Create ApiGatewayV2 client
 	api.client = apigatewayv2.New(session)
 	return &api, nil
+}
+func (api *APIGatewayV2API) getIntegration(apiID string, integrationID string, t *reporter.Task) error {
+	t0 := t.SubM(reporter.NewMessage("api.client.GetApi").
+		WithArg("apiID", apiID).
+		WithArg("integrationID", integrationID))
+	input := &apigatewayv2.GetIntegrationInput{
+		ApiId:         aws.String(apiID),
+		IntegrationId: aws.String(integrationID),
+	}
+	result, err := api.client.GetIntegration(input)
+	if err != nil {
+		t0.Fail(err)
+		return err
+	}
+	fmt.Printf("GetIntegrationInput:%s\n", result.GoString())
+	return nil
+}
+
+func (api *APIGatewayV2API) getIntegrations(apiID string, t *reporter.Task) error {
+	t0 := t.SubM(reporter.NewMessage("api.client.GetIntegrations").WithArg("apiID", apiID))
+
+	var nextToken = ""
+	for {
+		input := &apigatewayv2.GetIntegrationsInput{
+			ApiId:      aws.String(apiID),
+			MaxResults: aws.String("32"),
+		}
+		if len(nextToken) > 0 {
+			input.NextToken = &nextToken
+		}
+
+		listIntegrations, err := api.client.GetIntegrations(input)
+		if err != nil {
+			t0.Fail(err)
+			return err
+		}
+		// look for the user pool given by name
+		for _, integration := range listIntegrations.Items {
+			fmt.Printf("integration: %#v\n", integration)
+
+		}
+		// check if we have to paginate
+		if listIntegrations.NextToken != nil {
+			nextToken = *listIntegrations.NextToken
+		} else {
+			t0.Ok()
+			return nil
+		}
+	}
+}
+
+func (api *APIGatewayV2API) getRoutes(apiID string, t *reporter.Task) error {
+	t0 := t.SubM(reporter.NewMessage("api.client.getRoutes").WithArg("apiID", apiID))
+
+	var nextToken = ""
+	for {
+		input := &apigatewayv2.GetRoutesInput{
+			ApiId:      aws.String(apiID),
+			MaxResults: aws.String("32"),
+		}
+		if len(nextToken) > 0 {
+			input.NextToken = &nextToken
+		}
+
+		listRoutes, err := api.client.GetRoutes(input)
+		if err != nil {
+			t0.Fail(err)
+			return err
+		}
+		// look for the user pool given by name
+		for _, route := range listRoutes.Items {
+			fmt.Printf("route: %#v\n", route)
+
+		}
+		// check if we have to paginate
+		if listRoutes.NextToken != nil {
+			nextToken = *listRoutes.NextToken
+		} else {
+			t0.Ok()
+			return nil
+		}
+	}
 }
 
 func (api *APIGatewayV2API) findRestAPIByName(apiName string) (string, error) {
@@ -92,12 +176,13 @@ func (api *APIGatewayV2API) getAPIByID(apiID string, nestorID string, t *reporte
 	}, nil
 }
 
-func (api *APIGatewayV2API) doCreateRestAPI(apiName string, nestorID string, t *reporter.Task) (*APIGatewayV2Information, error) {
+func (api *APIGatewayV2API) doCreateRestAPI(apiName string, lambdaTargetArn string, nestorID string, t *reporter.Task) (*APIGatewayV2Information, error) {
 	t0 := t.SubM(reporter.NewMessage("api.client.CreateApi").WithArg("apiName", apiName))
 	input := &apigatewayv2.CreateApiInput{
 		Name:         aws.String(apiName),
 		Tags:         aws.StringMap(api.resourceTags.getTagsAsMapWithID(nestorID)),
 		ProtocolType: aws.String("HTTP"),
+		Target:       aws.String(lambdaTargetArn),
 	}
 	result, err := api.client.CreateApi(input)
 	if err != nil {
@@ -130,7 +215,7 @@ func (api *APIGatewayV2API) checkRestAPIExistenceAndTags(apiName string, nestorI
 	return result, nil
 }
 
-func (api *APIGatewayV2API) createRestAPI(apiName string, nestorID string, t *reporter.Task) (*APIGatewayV2Information, error) {
+func (api *APIGatewayV2API) createRestAPI(apiName string, lambdaTargetArn string, nestorID string, t *reporter.Task) (*APIGatewayV2Information, error) {
 	t0 := t.SubM(reporter.NewMessage("checkRestAPIExistenceAndTags").
 		WithArg("apiName", apiName).WithArg("nestorID", nestorID))
 	result, err := api.checkRestAPIExistenceAndTags(apiName, nestorID, t0)
@@ -145,7 +230,7 @@ func (api *APIGatewayV2API) createRestAPI(apiName string, nestorID string, t *re
 	}
 
 	t1 := t0.Sub("rest API does not exist - creating it")
-	result, err = api.doCreateRestAPI(apiName, nestorID, t1)
+	result, err = api.doCreateRestAPI(apiName, lambdaTargetArn, nestorID, t1)
 	if err != nil {
 		t1.Fail(err)
 		return nil, err

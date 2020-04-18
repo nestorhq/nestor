@@ -16,6 +16,7 @@ resources:
     - id: store
   apigateway_http:
     - id: main
+      targetLambdaId: resources.lambda_function.100-snoop
   lambda_function:
     - id: 100-snoop
       permissions:

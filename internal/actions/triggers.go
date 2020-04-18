@@ -2,7 +2,6 @@ package actions
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/nestorhq/nestor/internal/awsapi"
 	"github.com/nestorhq/nestor/internal/reporter"
@@ -38,7 +37,6 @@ func (actions *Actions) CreateTriggers(task *reporter.Task) error {
 		for _, lambdaTrigger := range s3CopyTrigger.Lambdas {
 			lambdaRes := nestorResources.FindResourceByID(lambdaTrigger.LambdaID)
 			lambdaArn := lambdaRes.GetAttribute(resources.AttArn)
-			fmt.Printf("@@ lambdaRes: %#v\n", lambdaRes)
 			if lambdaRes == nil {
 				return errors.New("s3uploadTrigger: lambda not registered:" + lambdaTrigger.LambdaID)
 			}

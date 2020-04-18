@@ -184,15 +184,14 @@ func (api *S3API) setNotificationConfiguration(bucketName string, notification *
 	}
 	input.NotificationConfiguration.LambdaFunctionConfigurations = lambdaFunctionConfigurations
 
-	fmt.Printf("@@ input: %s\n", input.GoString())
-	result, err := api.client.PutBucketNotificationConfiguration(input)
+	_, err := api.client.PutBucketNotificationConfiguration(input)
 	if err != nil {
 		t0.Fail(err)
 		return err
 	}
-	t0.LogM(reporter.NewMessage("PutBucketNotificationConfiguration").
-		WithArg("input", input.GoString()).
-		WithArg("result", result.GoString()))
+	// t0.LogM(reporter.NewMessage("PutBucketNotificationConfiguration").
+	// 	WithArg("input", input.GoString()).
+	// 	WithArg("result", result.GoString()))
 
 	return nil
 
