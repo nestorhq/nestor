@@ -15,3 +15,4 @@
 # vendor/
 nestor
 dist
+.DS_Store

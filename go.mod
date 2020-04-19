@@ -3,6 +3,7 @@ module github.com/nestorhq/nestor
 go 1.14
 
 require (
+	github.com/aws/aws-lambda-go v1.16.0
 	github.com/aws/aws-sdk-go v1.29.34
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/ghodss/yaml v1.0.0

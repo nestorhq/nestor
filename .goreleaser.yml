@@ -8,11 +8,29 @@ builds:
     env:
       - CGO_ENABLED=0
     main: ./cmd/nestor/main.go
+    binary: nestor
     goos:
       - darwin
     goarch:
       - amd64
+  - id: snoop-build
+    env:
+      - CGO_ENABLED=0
+    main: ./cmd/snoop/main.go
+    binary: snoop
+    goos:
+      - linux
+    goarch:
+      - amd64
 
+archives:
+  - id: snoop-archive
+    builds:
+      - snoop-build
+    name_template: "{{ .Binary }}"
+    format: zip
+    files:
+      - LICENSE
 checksum:
   name_template: 'checksums.txt'
 snapshot:
