@@ -40,6 +40,7 @@ type LambdaPermission struct {
 // ResourcesLambdaFunctionDefinition list the optional resources that we want in the application
 type ResourcesLambdaFunctionDefinition struct {
 	ID          string
+	Runtime     string
 	Permissions []LambdaPermission
 }
 

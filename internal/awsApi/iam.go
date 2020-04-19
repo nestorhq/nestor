@@ -128,9 +128,9 @@ func (api *IAMAPI) doCreateRole(roleName string, nestorID string, t *reporter.Ta
 		t0.Fail(err)
 		return nil, err
 	}
-	t0.LogM(reporter.NewMessage("CreateRole result").
-		WithArg("input", input.GoString()).
-		WithArg("result", result.GoString()))
+	// t0.LogM(reporter.NewMessage("CreateRole result").
+	// 	WithArg("input", input.GoString()).
+	// 	WithArg("result", result.GoString()))
 
 	return &RoleInformation{
 		RoleArn:  *result.Role.Arn,

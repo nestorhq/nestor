@@ -1,10 +1,12 @@
 package awsapi
 
 import (
+	"errors"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/nestorhq/nestor/internal/config"
 	"github.com/nestorhq/nestor/internal/reporter"
@@ -281,8 +283,20 @@ func (api *AwsAPI) CreateAppLambdaRole(roleName string, nestorID string, lambdaN
 	return result, nil
 }
 
+// GetLambdaRuntime return lambda runtime
+func (api *AwsAPI) GetLambdaRuntime(runtime string) (string, error) {
+	switch runtime {
+	case "go1X":
+		return lambda.RuntimeGo1X, nil
+	case "":
+		return lambda.RuntimeNodejs10X, nil
+	default:
+		return "", errors.New("invalid lambda runtime:" + runtime)
+	}
+}
+
 // CreateLambda create cloudwatch group
-func (api *AwsAPI) CreateLambda(lambdaName string, nestorID string, roleArn string, t *reporter.Task) (*LambdaInformation, error) {
+func (api *AwsAPI) CreateLambda(lambdaName string, nestorID string, roleArn string, runtime string, t *reporter.Task) (*LambdaInformation, error) {
 	t0 := t.SubM(
 		reporter.NewMessage("Aws API: CreateCloudWatchGroup").
 			WithArg("lambdaName", lambdaName))
@@ -292,9 +306,10 @@ func (api *AwsAPI) CreateLambda(lambdaName string, nestorID string, roleArn stri
 
 	errTop = retry(5, time.Second, func() error {
 		t1 := t0.Sub("Attempt create lambda...")
-		result, err = api.lambdaAPI.createLambda(lambdaName, nestorID, roleArn, t1)
+		result, err = api.lambdaAPI.createLambda(lambdaName, nestorID, roleArn, runtime, t1)
 		if err != nil {
 			if getAwsErrorCode(err) == "InvalidParameterValueException" {
+				t1.Log("InvalidParameterValueException: retrying...")
 				return err
 			}
 			t1.Fail(err)

@@ -108,7 +108,13 @@ func (actions *Actions) CreateResources(task *reporter.Task) error {
 		t1 := t.SubM(reporter.NewMessage("create lambda role").
 			WithArg("lambdaFunctionName", lambdaFunctionName).
 			WithArg("roleName", roleName).
+			WithArg("runtime", lambdaFunction.Runtime).
 			WithArg("resourceID", resourceID))
+		var runtime, err = api.GetLambdaRuntime(lambdaFunction.Runtime)
+		if err != nil {
+			t1.Fail(err)
+			return err
+		}
 
 		role, err := api.CreateAppLambdaRole(roleName, resourceID, lambdaFunctionName, lambdaFunction, actions.nestorResources, t1)
 		if err != nil {
@@ -120,7 +126,7 @@ func (actions *Actions) CreateResources(task *reporter.Task) error {
 		t1.Ok()
 
 		t2 := t.SubM(reporter.NewMessage("create Lambda ").WithArg("lambdaFunctionName", lambdaFunctionName))
-		res, err2 := api.CreateLambda(lambdaFunctionName, resourceID, role.RoleArn, t1)
+		res, err2 := api.CreateLambda(lambdaFunctionName, resourceID, role.RoleArn, runtime, t1)
 		if err2 != nil {
 			t2.Fail(err2)
 			return err2

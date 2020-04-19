@@ -71,7 +71,7 @@ func NewLambdaAPI(session *session.Session, resourceTags *ResourceTags, account 
 	return &api, nil
 }
 
-func (api *LambdaAPI) doCreateLambda(lambdaName string, nestorID string, roleArn string, task *reporter.Task) (*LambdaInformation, error) {
+func (api *LambdaAPI) doCreateLambda(lambdaName string, nestorID string, roleArn string, runtime string, task *reporter.Task) (*LambdaInformation, error) {
 	t0 := task.SubM(reporter.NewMessage("api.client.CreateFunction").WithArg("lambdaName", lambdaName))
 
 	zipData, err := makeZipData(defaultLambda, "index.js")
@@ -88,11 +88,15 @@ func (api *LambdaAPI) doCreateLambda(lambdaName string, nestorID string, roleArn
 		FunctionName: aws.String(lambdaName),
 		Tags:         aws.StringMap(api.resourceTags.getTagsAsMapWithID(nestorID)),
 		Handler:      aws.String("index.handler"),
-		Runtime:      aws.String(lambda.RuntimeNodejs10X),
+		Runtime:      aws.String(runtime),
 		Role:         aws.String(roleArn),
 	}
 	result, err := api.client.CreateFunction(input)
 	if err != nil {
+		// we don't log error for that AWS error as we may be in a retry loop
+		if getAwsErrorCode(err) == "InvalidParameterValueException" {
+			return nil, err
+		}
 		t0.Fail(err)
 		return nil, err
 	}
@@ -158,7 +162,7 @@ func (api *LambdaAPI) checkLambdaExistenceAndTags(lambdaName string, nestorID st
 	return lambdaInformation, nil
 }
 
-func (api *LambdaAPI) createLambda(lambdaName string, nestorID string, roleArn string, task *reporter.Task) (*LambdaInformation, error) {
+func (api *LambdaAPI) createLambda(lambdaName string, nestorID string, roleArn string, runtime string, task *reporter.Task) (*LambdaInformation, error) {
 	t0 := task.SubM(reporter.NewMessage("createLambda").WithArg("lambdaName", lambdaName))
 
 	t1 := t0.Sub("check if lambda exists")
@@ -179,7 +183,7 @@ func (api *LambdaAPI) createLambda(lambdaName string, nestorID string, roleArn s
 	}
 
 	t2 := t0.Sub("lambda does not exist - creating it")
-	result, err := api.doCreateLambda(lambdaName, nestorID, roleArn, t2)
+	result, err := api.doCreateLambda(lambdaName, nestorID, roleArn, runtime, t2)
 	if err != nil {
 		t2.Fail(err)
 		return nil, err
