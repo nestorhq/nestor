@@ -15,7 +15,7 @@ func handleRequest(context context.Context, e interface{}) (string, error) {
 	}
 
 	fmt.Println(string(out))
-	return fmt.Sprintf("hello from snoop! %s", string(out)), nil
+	return fmt.Sprintf(">lambda>go>snoop> %s", string(out)), nil
 }
 func main() {
 	lambda.Start(handleRequest)

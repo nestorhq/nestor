@@ -283,15 +283,22 @@ func (api *AwsAPI) CreateAppLambdaRole(roleName string, nestorID string, lambdaN
 	return result, nil
 }
 
-// GetLambdaRuntime return lambda runtime
-func (api *AwsAPI) GetLambdaRuntime(runtime string) (string, error) {
+func getLambdaCreateInformation(runtime string) (*LambdaCreateInformation, error) {
 	switch runtime {
 	case "go1X":
-		return lambda.RuntimeGo1X, nil
+		return &LambdaCreateInformation{
+			runtime:     lambda.RuntimeGo1X,
+			templateZip: "/snoop-go.zip",
+			handler:     "snoop",
+		}, nil
 	case "":
-		return lambda.RuntimeNodejs10X, nil
+		return &LambdaCreateInformation{
+			runtime:     lambda.RuntimeNodejs10X,
+			templateZip: "/snoop-js.zip",
+			handler:     "snoop.hanlder",
+		}, nil
 	default:
-		return "", errors.New("invalid lambda runtime:" + runtime)
+		return nil, errors.New("invalid lambda runtime:" + runtime)
 	}
 }
 
@@ -306,7 +313,12 @@ func (api *AwsAPI) CreateLambda(lambdaName string, nestorID string, roleArn stri
 
 	errTop = retry(5, time.Second, func() error {
 		t1 := t0.Sub("Attempt create lambda...")
-		result, err = api.lambdaAPI.createLambda(lambdaName, nestorID, roleArn, runtime, t1)
+		createInformation, err := getLambdaCreateInformation(runtime)
+		if err != nil {
+			t1.Fail(err)
+			return err
+		}
+		result, err = api.lambdaAPI.createLambda(lambdaName, nestorID, roleArn, createInformation, t1)
 		if err != nil {
 			if getAwsErrorCode(err) == "InvalidParameterValueException" {
 				t1.Log("InvalidParameterValueException: retrying...")

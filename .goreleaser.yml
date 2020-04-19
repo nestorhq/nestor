@@ -2,7 +2,7 @@ project_name: nestor
 before:
   hooks:
     - go mod download
-    - go generate ./...
+    - statik -src templates -dest internal/templates -f
 builds:
   - id: nestor-build
     env:

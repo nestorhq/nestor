@@ -1,14 +1,15 @@
 package awsapi
 
 import (
-	"archive/zip"
-	"bytes"
 	"fmt"
+	"io/ioutil"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/nestorhq/nestor/internal/reporter"
+	_ "github.com/nestorhq/nestor/internal/templates/statik" // embedded fs
+	"github.com/rakyll/statik/fs"
 )
 
 // LambdaAPI api
@@ -24,43 +25,11 @@ type LambdaInformation struct {
 	FunctionArn  string
 }
 
-const defaultLambda = `exports.handler = async (event, context, callback) => {
-  console.log('>lambda>event> ', JSON.stringify(event, null, '  '));
-  callback();
-}`
-
-func makeZipData(content string, fileName string) ([]byte, error) {
-
-	// Create a buffer to write our archive to.
-	buf := new(bytes.Buffer)
-
-	// Create a new zip archive.
-	zipWriter := zip.NewWriter(buf)
-
-	// Add some files to the archive.
-	var files = []struct {
-		Name, Body string
-	}{
-		{fileName, content},
-	}
-	for _, file := range files {
-		zipFile, err := zipWriter.Create(file.Name)
-		if err != nil {
-			return nil, err
-		}
-		_, err = zipFile.Write([]byte(file.Body))
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	// Make sure to check the error on Close.
-	err := zipWriter.Close()
-	if err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
+// LambdaCreateInformation description of create information for lambda
+type LambdaCreateInformation struct {
+	runtime     string
+	templateZip string
+	handler     string
 }
 
 // NewLambdaAPI constructor
@@ -71,11 +40,32 @@ func NewLambdaAPI(session *session.Session, resourceTags *ResourceTags, account 
 	return &api, nil
 }
 
-func (api *LambdaAPI) doCreateLambda(lambdaName string, nestorID string, roleArn string, runtime string, task *reporter.Task) (*LambdaInformation, error) {
+func (api *LambdaAPI) doCreateLambda(lambdaName string, nestorID string, roleArn string, createInformation *LambdaCreateInformation, task *reporter.Task) (*LambdaInformation, error) {
 	t0 := task.SubM(reporter.NewMessage("api.client.CreateFunction").WithArg("lambdaName", lambdaName))
 
-	zipData, err := makeZipData(defaultLambda, "index.js")
+	// read lambda code from statik (embedded) filesystem
+	t1 := t0.SubM(reporter.NewMessage("create lambda with statik").
+		WithArg("lambdaName", createInformation.runtime).
+		WithArg("templateZip", createInformation.templateZip).
+		WithArg("handler", createInformation.handler))
+	statikFS, err := fs.New()
 	if err != nil {
+		t1.Log("cannot initialize statikFS")
+		t1.Fail(err)
+		return nil, err
+	}
+	r, err := statikFS.Open(createInformation.templateZip)
+	// fmt.Printf("@@ statik file: %#v\n", r)
+	if err != nil {
+		t1.Log("cannot read from statikFS:" + createInformation.templateZip)
+		t1.Fail(err)
+		return nil, err
+	}
+	defer r.Close()
+	zipData, err := ioutil.ReadAll(r)
+	if err != nil {
+		t1.Log("cannot read all data from statikFS:" + createInformation.templateZip)
+		t1.Fail(err)
 		return nil, err
 	}
 
@@ -87,8 +77,8 @@ func (api *LambdaAPI) doCreateLambda(lambdaName string, nestorID string, roleArn
 		Code:         createCode,
 		FunctionName: aws.String(lambdaName),
 		Tags:         aws.StringMap(api.resourceTags.getTagsAsMapWithID(nestorID)),
-		Handler:      aws.String("index.handler"),
-		Runtime:      aws.String(runtime),
+		Handler:      aws.String(createInformation.handler),
+		Runtime:      aws.String(createInformation.runtime),
 		Role:         aws.String(roleArn),
 	}
 	result, err := api.client.CreateFunction(input)
@@ -162,7 +152,7 @@ func (api *LambdaAPI) checkLambdaExistenceAndTags(lambdaName string, nestorID st
 	return lambdaInformation, nil
 }
 
-func (api *LambdaAPI) createLambda(lambdaName string, nestorID string, roleArn string, runtime string, task *reporter.Task) (*LambdaInformation, error) {
+func (api *LambdaAPI) createLambda(lambdaName string, nestorID string, roleArn string, createInformation *LambdaCreateInformation, task *reporter.Task) (*LambdaInformation, error) {
 	t0 := task.SubM(reporter.NewMessage("createLambda").WithArg("lambdaName", lambdaName))
 
 	t1 := t0.Sub("check if lambda exists")
@@ -183,7 +173,7 @@ func (api *LambdaAPI) createLambda(lambdaName string, nestorID string, roleArn s
 	}
 
 	t2 := t0.Sub("lambda does not exist - creating it")
-	result, err := api.doCreateLambda(lambdaName, nestorID, roleArn, runtime, t2)
+	result, err := api.doCreateLambda(lambdaName, nestorID, roleArn, createInformation, t2)
 	if err != nil {
 		t2.Fail(err)
 		return nil, err

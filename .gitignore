@@ -1,3 +1,6 @@
+# we ignore generated template
+internal/templates/statik/statik.go
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -16,3 +19,4 @@
 nestor
 dist
 .DS_Store
+templates/*.zip

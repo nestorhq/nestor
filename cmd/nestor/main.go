@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/nestorhq/nestor/internal/config"
 	"github.com/nestorhq/nestor/internal/nestorcli"
 	"github.com/segmentio/cli"
@@ -9,7 +11,7 @@ import (
 func main() {
 	// reporter.Experiment()
 	// os.Exit(0)
-
+	fmt.Println("@@ nestor")
 	nestorConfig, err := config.ReadConfig("nestor.yml")
 	if err != nil {
 		panic(err)
