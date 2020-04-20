@@ -25,7 +25,12 @@ func main() {
 		nestorcli.CliProvision(config.Environment, nestorConfig)
 	})
 
+	cliDeploy := cli.Command(func(config cliEnvConfig) {
+		nestorcli.CliDeploy(config.Environment, nestorConfig)
+	})
+
 	cli.Exec(cli.CommandSet{
 		"provision": cliProvision,
+		"deploy":    cliDeploy,
 	})
 }
