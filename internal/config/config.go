@@ -8,6 +8,17 @@ import (
 	"github.com/ghodss/yaml"
 )
 
+// ResourcesLambdaFunctionDeployment deployment definition
+type ResourcesLambdaFunctionDeployment struct {
+	ID   string `json:"id"`
+	File string `json:"file"`
+}
+
+// DeploymentsDefinition deployments descriptions
+type DeploymentsDefinition struct {
+	LambdaFunction []ResourcesLambdaFunctionDeployment `json:"lambda_function"`
+}
+
 // TriggerS3CopyNotificationDefinition trigger associated to s3 upload
 type TriggerS3CopyNotificationDefinition struct {
 	LambdaID string `json:"lambdaId"`
@@ -106,7 +117,8 @@ type Config struct {
 	Nestor      string
 	Application ApplicationDefinition `json:"application"`
 	Resources   ResourceDefinition    `json:"resources"`
-	Triggers    TriggersDefinition    `json:"triggers"` //
+	Triggers    TriggersDefinition    `json:"triggers"`
+	Deployments DeploymentsDefinition `json:"deployments"`
 }
 
 // ReadConfig read congiration from file
