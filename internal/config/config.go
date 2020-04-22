@@ -77,7 +77,8 @@ type ResourceDynamodbDefinition struct {
 
 // ResourceS3BucketDefinition resource definition
 type ResourceS3BucketDefinition struct {
-	ID string
+	ID         string
+	BucketName string
 }
 
 // ResourcesCloudwatchLogsGroupDefinition resource definition

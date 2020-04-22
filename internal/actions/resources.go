@@ -3,6 +3,7 @@ package actions
 import (
 	"errors"
 
+	"github.com/nestorhq/nestor/internal/awsapi"
 	"github.com/nestorhq/nestor/internal/reporter"
 	"github.com/nestorhq/nestor/internal/resources"
 )
@@ -74,13 +75,19 @@ func (actions *Actions) CreateResources(task *reporter.Task) error {
 		t1 := t.SubM(reporter.NewMessage("create s3 bucket").
 			WithArg("s3BucketName", s3BucketName).
 			WithArg("resourceID", resourceID))
-		res, err := api.CreateBucket(s3BucketName, resourceID, t1)
-		if err != nil {
-			t1.Fail(err)
-			return err
+		if s3Bucket.BucketName != "" {
+			t1.Log("Bucker Name defined - we don't do anything:" + s3Bucket.BucketName)
+			nestorResources.RegisterNestorResource(resourceID, resources.S3Bucket, resources.AttArn, awsapi.MkBucketArn(s3Bucket.BucketName))
+			nestorResources.RegisterNestorResource(resourceID, resources.S3Bucket, resources.AttName, s3Bucket.BucketName)
+		} else {
+			res, err := api.CreateBucket(s3BucketName, resourceID, t1)
+			if err != nil {
+				t1.Fail(err)
+				return err
+			}
+			nestorResources.RegisterNestorResource(resourceID, resources.S3Bucket, resources.AttArn, res.BucketArn)
+			nestorResources.RegisterNestorResource(resourceID, resources.S3Bucket, resources.AttName, res.BucketName)
 		}
-		nestorResources.RegisterNestorResource(resourceID, resources.S3Bucket, resources.AttArn, res.BucketArn)
-		nestorResources.RegisterNestorResource(resourceID, resources.S3Bucket, resources.AttName, res.BucketName)
 		t1.Ok()
 	}
 

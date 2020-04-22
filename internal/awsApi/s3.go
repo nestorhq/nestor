@@ -33,6 +33,11 @@ type S3NotificationDefinition struct {
 	Lambdas []S3NotificationLambdaDefinition
 }
 
+// MkBucketArn build ARN from bucket name
+func MkBucketArn(bucketName string) string {
+	return fmt.Sprintf("arn:aws:s3:::%s", bucketName)
+}
+
 // NewS3API constructor
 func NewS3API(session *session.Session, resourceTags *ResourceTags) (*S3API, error) {
 	var api = S3API{resourceTags: resourceTags}
@@ -44,7 +49,7 @@ func NewS3API(session *session.Session, resourceTags *ResourceTags) (*S3API, err
 func mkS3Information(bucketName string) *S3Information {
 	return &S3Information{
 		BucketName: bucketName,
-		BucketArn:  fmt.Sprintf("arn:aws:s3:::%s", bucketName),
+		BucketArn:  MkBucketArn(bucketName),
 	}
 }
 

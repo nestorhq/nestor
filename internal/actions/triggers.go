@@ -45,16 +45,20 @@ func (actions *Actions) CreateTriggers(task *reporter.Task) error {
 				return err
 			}
 
-			notification.Lambdas = append(notification.Lambdas, awsapi.S3NotificationLambdaDefinition{
+			def := awsapi.S3NotificationLambdaDefinition{
 				LambdaArn: lambdaRes.GetAttribute(resources.AttArn),
-				Prefix:    lambdaTrigger.Prefix,
-				Suffix:    lambdaTrigger.Suffix,
-			})
-
-			err = api.SetBucketNotificationConfiguration(bucketName, notification, t0)
-			if err != nil {
-				return err
 			}
+			if lambdaTrigger.Prefix != "" {
+				def.Prefix = lambdaTrigger.Prefix
+			}
+			if lambdaTrigger.Suffix != "" {
+				def.Suffix = lambdaTrigger.Suffix
+			}
+			notification.Lambdas = append(notification.Lambdas, def)
+		}
+		err = api.SetBucketNotificationConfiguration(bucketName, notification, t0)
+		if err != nil {
+			return err
 		}
 	}
 	return nil
