@@ -110,7 +110,10 @@ type ResourceDefinition struct {
 
 // ApplicationDefinition application definition
 type ApplicationDefinition struct {
-	Name string
+	Name          string
+	ProfileName   string // name of profile to use to initialize aws API
+	Region        string // default region for resources creation
+	RegionCognito string // region for cognito resource
 }
 
 // Config nestor configuration

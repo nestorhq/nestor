@@ -23,7 +23,8 @@ func CliProvision(environment string, nestorConfig *config.Config) {
 
 	// TODO: hard coded
 	t0 := t.Sub("Initialize aws API")
-	api, err := awsapi.NewAwsAPI("sls", resourceTags, "us-west-1", "us-west-2", t0)
+	api, err := awsapi.NewAwsAPI(nestorConfig.Application.ProfileName,
+		resourceTags, nestorConfig.Application.Region, nestorConfig.Application.RegionCognito, t0)
 
 	if err != nil {
 		panic(err)

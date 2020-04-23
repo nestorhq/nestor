@@ -1,7 +1,10 @@
 nestor: "1.0"
 application:
   name: myapp
-# list optional resources that we need in the application
+	profileName: sls
+	region: us-west-1
+	regionCognito: us-west-2
+
 resources:
   cognito_userpool:
     - id: main

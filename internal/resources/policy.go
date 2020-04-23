@@ -13,7 +13,7 @@ import (
 type PolicyStatement struct {
 	Effect   string
 	Action   []string
-	Resource string
+	Resource []string
 }
 
 // GetPolicyStatementsForLambda returns an array of policy statements
@@ -41,9 +41,12 @@ func (res *Resources) GetPolicyStatementsForLambda(permissions []config.LambdaPe
 				}
 			}
 			statements = append(statements, PolicyStatement{
-				Effect:   "Allow",
-				Resource: resource.GetAttribute(AttArn),
-				Action:   actions,
+				Effect: "Allow",
+				Resource: []string{
+					resource.GetAttribute(AttArn),
+					resource.GetAttribute(AttArn) + "/*",
+				},
+				Action: actions,
 			})
 
 		case DynamoDbTable:
@@ -65,7 +68,7 @@ func (res *Resources) GetPolicyStatementsForLambda(permissions []config.LambdaPe
 			}
 			statements = append(statements, PolicyStatement{
 				Effect:   "Allow",
-				Resource: resource.GetAttribute(AttArn),
+				Resource: []string{resource.GetAttribute(AttArn)},
 				Action:   actions,
 			})
 
