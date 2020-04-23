@@ -40,6 +40,63 @@ func NewLambdaAPI(session *session.Session, resourceTags *ResourceTags, account 
 	return &api, nil
 }
 
+func (api *LambdaAPI) updateLambdaConfigurationHandler(lambdaName string, handler string, task *reporter.Task) (*LambdaInformation, error) {
+	t0 := task.SubM(reporter.NewMessage("api.client.UpdateFunctionConfiguration").WithArg("lambdaName", lambdaName))
+
+	input := &lambda.UpdateFunctionConfigurationInput{
+		FunctionName: aws.String(lambdaName),
+		Handler:      aws.String(handler),
+	}
+	result, err := api.client.UpdateFunctionConfiguration(input)
+	if err != nil {
+		t0.Fail(err)
+		return nil, err
+	}
+	t0.Okr(map[string]string{
+		"FunctionArn":  *result.FunctionArn,
+		"FunctionName": *result.FunctionName,
+		"Version":      *result.Version,
+		"State":        *result.State,
+	})
+
+	return &LambdaInformation{
+		FunctionName: *result.FunctionName,
+		FunctionArn:  *result.FunctionArn,
+	}, nil
+
+}
+
+func (api *LambdaAPI) updateLambdaCode(lambdaName string, zipFileName string, task *reporter.Task) (*LambdaInformation, error) {
+	t0 := task.SubM(reporter.NewMessage("api.client.UpdateFunctionCode").WithArg("lambdaName", lambdaName))
+
+	zipData, err := ioutil.ReadFile(zipFileName)
+	if err != nil {
+		return nil, err
+	}
+	input := &lambda.UpdateFunctionCodeInput{
+		FunctionName: aws.String(lambdaName),
+		Publish:      aws.Bool(true),
+		ZipFile:      zipData,
+	}
+	result, err := api.client.UpdateFunctionCode(input)
+	if err != nil {
+		t0.Fail(err)
+		return nil, err
+	}
+	t0.Okr(map[string]string{
+		"FunctionArn":  *result.FunctionArn,
+		"FunctionName": *result.FunctionName,
+		"Version":      *result.Version,
+		"State":        *result.State,
+	})
+
+	return &LambdaInformation{
+		FunctionName: *result.FunctionName,
+		FunctionArn:  *result.FunctionArn,
+	}, nil
+
+}
+
 func (api *LambdaAPI) doCreateLambda(lambdaName string, nestorID string, roleArn string, createInformation *LambdaCreateInformation, task *reporter.Task) (*LambdaInformation, error) {
 	t0 := task.SubM(reporter.NewMessage("api.client.CreateFunction").WithArg("lambdaName", lambdaName))
 

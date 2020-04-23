@@ -8,23 +8,27 @@ import (
 	"github.com/nestorhq/nestor/internal/resources"
 )
 
+// NestorConfigVersion version of the nestor config format
+const NestorConfigVersion = "1"
+
 // CliProvision processing for provision CLI command
 func CliProvision(environment string, nestorConfig *config.Config) {
-	var nestorResources = resources.NewResources()
 	var appName = nestorConfig.Application.Name
+	var profileName = nestorConfig.Application.ProfileName
+	var region = nestorConfig.Application.Region
+	var regionCognito = nestorConfig.Application.RegionCognito
+	var nestorResources = resources.NewResources()
 
 	var t = reporter.NewReporterM(reporter.NewMessage("command: provision").
 		WithArg("environment", environment).
 		WithArg("appName", appName)).
 		Start()
 
-	// TODO: hard coded
-	resourceTags := awsapi.NewResourceTag("1", environment, appName)
+	// tags to associate to the created aws resources
+	resourceTags := awsapi.NewResourceTag(NestorConfigVersion, environment, appName)
 
-	// TODO: hard coded
 	t0 := t.Sub("Initialize aws API")
-	api, err := awsapi.NewAwsAPI(nestorConfig.Application.ProfileName,
-		resourceTags, nestorConfig.Application.Region, nestorConfig.Application.RegionCognito, t0)
+	api, err := awsapi.NewAwsAPI(profileName, resourceTags, region, regionCognito, t0)
 
 	if err != nil {
 		panic(err)

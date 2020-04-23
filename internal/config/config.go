@@ -10,8 +10,9 @@ import (
 
 // ResourcesLambdaFunctionDeployment deployment definition
 type ResourcesLambdaFunctionDeployment struct {
-	ID   string `json:"id"`
-	File string `json:"file"`
+	ID      string `json:"id"`
+	File    string `json:"file"`
+	Handler string `json:"handler"`
 }
 
 // DeploymentsDefinition deployments descriptions
