@@ -6,7 +6,13 @@ import (
 	"github.com/nestorhq/nestor/internal/reporter"
 )
 
-func (actions *Actions) findLambdaNameFromID(ID string) (string, error) {
+// description of static lambda information
+type lambdaConfigInformation struct {
+	functioName          string
+	environmentVariables map[string]string
+}
+
+func (actions *Actions) findLambdaInformationFromID(ID string) (*lambdaConfigInformation, error) {
 	var nestorConfig = actions.nestorConfig
 	var appName = actions.nestorConfig.Application.Name
 	var environment = actions.environment
@@ -14,10 +20,18 @@ func (actions *Actions) findLambdaNameFromID(ID string) (string, error) {
 		if lambdaFunction.ID == ID {
 			// TODO: refactor to have a single method defining the lambda name
 			var lambdaFunctionName = appName + "-" + environment + "-" + lambdaFunction.ID
-			return lambdaFunctionName, nil
+			var environmentVariables = map[string]string{}
+			for _, envVar := range lambdaFunction.Environment {
+				environmentVariables[envVar.Name] = envVar.Value
+			}
+			var result = &lambdaConfigInformation{
+				functioName:          lambdaFunctionName,
+				environmentVariables: environmentVariables,
+			}
+			return result, nil
 		}
 	}
-	return "", errors.New("No lambda found with id:" + ID)
+	return nil, errors.New("No lambda found with id:" + ID)
 }
 
 // DoDeployment perform deploymenst
@@ -37,14 +51,16 @@ func (actions *Actions) DoDeployment(task *reporter.Task) error {
 			WithArg("id", lambdaDeployment.ID).
 			WithArg("file", lambdaDeployment.File).
 			WithArg("handler", lambdaDeployment.Handler))
-		lambdaName, err := actions.findLambdaNameFromID(lambdaDeployment.ID)
+
+		lambdaIformation, err := actions.findLambdaInformationFromID(lambdaDeployment.ID)
 		if err != nil {
 			t0.Fail(err)
 			return err
 		}
 		zipFileName := lambdaDeployment.File
 		handler := lambdaDeployment.Handler
-		err = api.UpdateLambdaCodeFromZip(lambdaName, zipFileName, handler, t0)
+		err = api.UpdateLambdaCodeFromZip(lambdaIformation.functioName, zipFileName, handler,
+			lambdaIformation.environmentVariables, t0)
 		if err != nil {
 			t0.Fail(err)
 			return err

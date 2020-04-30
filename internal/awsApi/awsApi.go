@@ -385,13 +385,14 @@ func (api *AwsAPI) SetBucketNotificationConfiguration(bucketName string, notific
 }
 
 // UpdateLambdaCodeFromZip update code for a lmabda from a zip file
-func (api *AwsAPI) UpdateLambdaCodeFromZip(lambdaName string, zipFileName string, handler string, t *reporter.Task) error {
+func (api *AwsAPI) UpdateLambdaCodeFromZip(lambdaName string, zipFileName string, handler string,
+	environmentVariables map[string]string, t *reporter.Task) error {
 	t0 := t.SubM(
 		reporter.NewMessage("Aws API: updateLambdaCode").
 			WithArg("bucketName", lambdaName).
 			WithArg("zipFileName", zipFileName))
 
-	lambdaInformation, error := api.lambdaAPI.updateLambdaConfigurationHandler(lambdaName, handler, t0)
+	lambdaInformation, error := api.lambdaAPI.updateLambdaConfiguration(lambdaName, handler, environmentVariables, t0)
 	if error != nil {
 		t0.Fail(error)
 	}

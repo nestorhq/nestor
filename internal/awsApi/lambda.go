@@ -40,12 +40,16 @@ func NewLambdaAPI(session *session.Session, resourceTags *ResourceTags, account 
 	return &api, nil
 }
 
-func (api *LambdaAPI) updateLambdaConfigurationHandler(lambdaName string, handler string, task *reporter.Task) (*LambdaInformation, error) {
+func (api *LambdaAPI) updateLambdaConfiguration(lambdaName string, handler string,
+	environmentVariables map[string]string, task *reporter.Task) (*LambdaInformation, error) {
 	t0 := task.SubM(reporter.NewMessage("api.client.UpdateFunctionConfiguration").WithArg("lambdaName", lambdaName))
 
 	input := &lambda.UpdateFunctionConfigurationInput{
 		FunctionName: aws.String(lambdaName),
 		Handler:      aws.String(handler),
+		Environment: &lambda.Environment{
+			Variables: aws.StringMap(environmentVariables),
+		},
 	}
 	result, err := api.client.UpdateFunctionConfiguration(input)
 	if err != nil {

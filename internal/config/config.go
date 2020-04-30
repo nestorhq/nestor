@@ -49,10 +49,17 @@ type LambdaPermission struct {
 	Actions    []LambdaPermissionAction `json:"actions"`
 }
 
+// LambdaEnvironmentVariables description of environment variable for lambda
+type LambdaEnvironmentVariables struct {
+	Name  string
+	Value string
+}
+
 // ResourcesLambdaFunctionDefinition list the optional resources that we want in the application
 type ResourcesLambdaFunctionDefinition struct {
 	ID          string
 	Runtime     string
+	Environment []LambdaEnvironmentVariables
 	Permissions []LambdaPermission
 }
 
