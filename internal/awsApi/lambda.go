@@ -318,7 +318,7 @@ func (api *LambdaAPI) giveS3InvokePermission(lambdaArn string, bucketArn string,
 
 func (api *LambdaAPI) giveAPIGatewayInvokePermission(lambdaArn string, apiID string, task *reporter.Task) error {
 	var sid = "sid-apigwinvoke-" + apiID
-	t0 := task.SubM(reporter.NewMessage("giveS3InvokePermission").
+	t0 := task.SubM(reporter.NewMessage("giveApiGatewayInvokePermission").
 		WithArg("lambdaArn", lambdaArn).
 		WithArg("apiID", apiID))
 	err := api.removePermission(lambdaArn, sid, t0)
@@ -327,7 +327,7 @@ func (api *LambdaAPI) giveAPIGatewayInvokePermission(lambdaArn string, apiID str
 		return err
 	}
 
-	sourceArn := fmt.Sprintf("arn:aws:execute-api:us-west-1:%s:%s/*/$default", api.account, apiID)
+	sourceArn := fmt.Sprintf("arn:aws:execute-api:us-west-2:%s:%s/*/$default", api.account, apiID)
 
 	err = api.addInvokePermission(lambdaArn, sid, "apigateway.amazonaws.com", sourceArn, "", t0)
 	if err != nil {

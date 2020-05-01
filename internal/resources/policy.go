@@ -36,6 +36,8 @@ func (res *Resources) GetPolicyStatementsForLambda(permissions []config.LambdaPe
 					actions = append(actions, "s3:PutObject")
 				case "delete":
 					actions = append(actions, "s3:DeleteObject")
+				case "list":
+					actions = append(actions, "s3:ListBucket")
 				default:
 					return nil, errors.New("Invalid operation on bucket:" + action.Operation)
 				}
