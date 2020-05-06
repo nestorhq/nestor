@@ -21,3 +21,4 @@ https://github.com/retgits/lambda-util/blob/master/s3.go
 ```
 sourceArn := fmt.Sprintf("arn:aws:execute-api:us-west-2:%s:%s/*/$default", api.account, apiID)
 ```
+- allow change of throughput for dynamodb tables
