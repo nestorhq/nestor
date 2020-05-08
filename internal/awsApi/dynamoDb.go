@@ -61,12 +61,27 @@ func (api *DynamoDbAPI) doCreateMonoTable(tableName string, nestorID string, tas
 				KeyType:       aws.String("RANGE"),
 			},
 		},
-		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
-			ReadCapacityUnits:  aws.Int64(2),
-			WriteCapacityUnits: aws.Int64(2),
+		GlobalSecondaryIndexes: []*dynamodb.GlobalSecondaryIndex{
+			{
+				IndexName: aws.String("gsi_1"),
+				KeySchema: []*dynamodb.KeySchemaElement{
+					{
+						AttributeName: aws.String("sk"),
+						KeyType:       aws.String("HASH"),
+					},
+					{
+						AttributeName: aws.String("pk"),
+						KeyType:       aws.String("RANGE"),
+					},
+				},
+				Projection: &dynamodb.Projection{
+					ProjectionType: aws.String("ALL"),
+				},
+			},
 		},
-		TableName: aws.String(tableName),
-		Tags:      dynamodbTags,
+		BillingMode: aws.String("PAY_PER_REQUEST"),
+		TableName:   aws.String(tableName),
+		Tags:        dynamodbTags,
 	}
 
 	result, err := api.client.CreateTable(input)
