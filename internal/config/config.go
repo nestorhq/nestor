@@ -105,6 +105,12 @@ type ResourcesApigatewayHTTPDefinition struct {
 	TargetLambdaID string
 }
 
+// ResourcesSESDomainDefinition resource definition
+type ResourcesSESDomainDefinition struct {
+	ID         string
+	DomainName string
+}
+
 // ResourceDefinition list the optional resources that we want in the application
 type ResourceDefinition struct {
 	CognitoUserPool     []ResourceCognitoUserPoolDefinition      `json:"cognito_userpool"`
@@ -114,6 +120,7 @@ type ResourceDefinition struct {
 	CloudwatchlogsGroup []ResourcesCloudwatchLogsGroupDefinition `json:"cloudwatchlogs_group"`
 	EventBridgeBus      []ResourcesEventBridgeBusDefinition      `json:"eventbridge_bus"`
 	ApigatewayHTTP      []ResourcesApigatewayHTTPDefinition      `json:"apigateway_http"`
+	SESDomain           []ResourcesSESDomainDefinition           `json:"ses_domain"`
 }
 
 // ApplicationDefinition application definition

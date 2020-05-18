@@ -27,6 +27,7 @@ type AwsAPI struct {
 	APIGatewayV2API   *APIGatewayV2API
 	CloudWatchLogsAPI *CloudWatchLogsAPI
 	IAMAPI            *IAMAPI
+	SESAPI            *SESAPI
 }
 
 func retry(attempts int, sleep time.Duration, fn func() error) error {
@@ -149,6 +150,13 @@ func NewAwsAPI(profileName string, resourceTags *ResourceTags, region string, co
 	awsAPI.IAMAPI, err = NewIAMAPI(sess, resourceTags)
 	if err != nil {
 		t10.Fail(err)
+		return nil, err
+	}
+
+	t11 := t0.Sub("create SES API")
+	awsAPI.SESAPI, err = NewSESAPI(sess, region, resourceTags)
+	if err != nil {
+		t11.Fail(err)
 		return nil, err
 	}
 
@@ -406,4 +414,21 @@ func (api *AwsAPI) UpdateLambdaCodeFromZip(lambdaName string, zipFileName string
 		"FunctionName": lambdaInformation.FunctionName,
 	})
 	return nil
+}
+
+// CreateSesDomain retrieve list of subdomain
+func (api *AwsAPI) CreateSesDomain(domain string, t *reporter.Task) (*SesDomainInformation, error) {
+	t0 := t.SubM(
+		reporter.NewMessage("Aws API: createSESDomain"))
+
+	domainInformation, err := api.SESAPI.createSESDomain(domain, t0)
+	if err != nil {
+		t0.Fail(err)
+		return nil, err
+	}
+	t0.Okr(map[string]string{
+		"SesDomainARN":  domainInformation.SesDomainARN,
+		"SesDomainName": domainInformation.SesDomainName,
+	})
+	return domainInformation, nil
 }

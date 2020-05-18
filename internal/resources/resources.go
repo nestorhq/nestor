@@ -23,6 +23,8 @@ const (
 	CloudwatchLogGroup
 	// LambdaFunction type
 	LambdaFunction
+	// SESMail send mail
+	SESMail
 )
 
 // ResourceAttName type for resource attributes names

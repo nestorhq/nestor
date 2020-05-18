@@ -74,6 +74,27 @@ func (res *Resources) GetPolicyStatementsForLambda(permissions []config.LambdaPe
 				Action:   actions,
 			})
 
+		case SESMail:
+			var actions []string
+			for _, action := range permission.Actions {
+				switch action.Operation {
+				case "sendmail":
+					actions = append(actions, "ses:SendEmail")
+					actions = append(actions, "ses:SendRawEmail")
+				default:
+					return nil, errors.New("Invalid operation on SES:" + action.Operation)
+				}
+			}
+			// TODO: be more rstrictive in terms of permission
+			// eg. limit sender from domain
+			statements = append(statements, PolicyStatement{
+				Effect:   "Allow",
+				Resource: []string{"*"},
+				Action:   actions,
+			})
+
+			break
+
 		default:
 			return nil, errors.New("no policy can be set on:" + resourceID)
 		}

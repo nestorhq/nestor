@@ -107,6 +107,23 @@ func (actions *Actions) CreateResources(task *reporter.Task) error {
 		t1.Ok()
 	}
 
+	t.Section("Create SES domains")
+	for _, sesDomain := range nestorConfig.Resources.SESDomain {
+		var domain = sesDomain.DomainName
+		var resourceID = "resources.ses_domain." + sesDomain.ID
+		t1 := t.SubM(reporter.NewMessage("create SES domain").
+			WithArg("domain", domain).
+			WithArg("resourceID", resourceID))
+		res, err := api.CreateSesDomain(domain, t1)
+		if err != nil {
+			t1.Fail(err)
+			return err
+		}
+		nestorResources.RegisterNestorResource(resourceID, resources.SESMail, resources.AttArn, res.SesDomainARN)
+		nestorResources.RegisterNestorResource(resourceID, resources.SESMail, resources.AttName, res.SesDomainName)
+		t1.Ok()
+	}
+
 	t.Section("Create Lambda Functions")
 	for _, lambdaFunction := range nestorConfig.Resources.LambdaFunction {
 		var lambdaFunctionName = appName + "-" + environment + "-" + lambdaFunction.ID
