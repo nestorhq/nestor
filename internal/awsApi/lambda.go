@@ -224,7 +224,7 @@ func (api *LambdaAPI) createLambda(lambdaName string, nestorID string, roleArn s
 	}
 
 	if lambdaInformation != nil {
-		t1.Log("table exists")
+		t1.Log("lambda exists")
 		t1.Okr(map[string]string{
 			"functionName": lambdaInformation.FunctionName,
 			"arn":          lambdaInformation.FunctionArn,

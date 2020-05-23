@@ -23,4 +23,4 @@ sourceArn := fmt.Sprintf("arn:aws:execute-api:us-west-2:%s:%s/*/$default", api.a
 ```
 - allow change of throughput for dynamodb tables
 - add creation of SES domains
-
+- add mechanism to allow the change of permission policy for a lambda without having to redeploy the lambda

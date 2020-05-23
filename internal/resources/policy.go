@@ -89,7 +89,7 @@ func (res *Resources) GetPolicyStatementsForLambda(permissions []config.LambdaPe
 			// eg. limit sender from domain
 			statements = append(statements, PolicyStatement{
 				Effect:   "Allow",
-				Resource: []string{"*"},
+				Resource: []string{resource.GetAttribute(AttArn)},
 				Action:   actions,
 			})
 

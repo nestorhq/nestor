@@ -313,7 +313,7 @@ func getLambdaCreateInformation(runtime string) (*LambdaCreateInformation, error
 // CreateLambda create cloudwatch group
 func (api *AwsAPI) CreateLambda(lambdaName string, nestorID string, roleArn string, runtime string, t *reporter.Task) (*LambdaInformation, error) {
 	t0 := t.SubM(
-		reporter.NewMessage("Aws API: CreateCloudWatchGroup").
+		reporter.NewMessage("Aws API: CreateLambda").
 			WithArg("lambdaName", lambdaName))
 
 	var result *LambdaInformation
